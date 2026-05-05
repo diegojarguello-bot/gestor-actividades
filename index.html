@@ -7,136 +7,476 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f0f4f8; --surface: #ffffff; --surface2: #e8edf2; --border: #cdd5de;
-    --text: #1c2b3a; --text-muted: #5a7080; --text-light: #8a9db0;
-    --accent: #2563a8; --accent-light: #dbeafe; --accent-dark: #1a4a80;
-    --success: #1a6644; --success-light: #d1fae5;
-    --warning: #92530a; --warning-light: #fef3c7;
-    --danger: #9b1c1c; --danger-light: #fee2e2;
+    --bg: #f0f4f8;
+    --surface: #ffffff;
+    --surface2: #e8edf2;
+    --border: #cdd5de;
+    --text: #1c2b3a;
+    --text-muted: #5a7080;
+    --text-light: #8a9db0;
+    --accent: #2563a8;
+    --accent-light: #dbeafe;
+    --accent-dark: #1a4a80;
+    --success: #1a6644;
+    --success-light: #d1fae5;
+    --warning: #92530a;
+    --warning-light: #fef3c7;
+    --danger: #9b1c1c;
+    --danger-light: #fee2e2;
     --shadow-sm: 0 1px 4px rgba(28,43,58,0.08);
     --shadow: 0 2px 10px rgba(28,43,58,0.10);
     --shadow-lg: 0 6px 28px rgba(28,43,58,0.14);
-    --radius: 8px; --radius-lg: 12px;
+    --radius: 8px;
+    --radius-lg: 12px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Source Sans 3', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; }
 
-  /* LOADING */
+  /* ── LOADING ── */
   #loading-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:18px; background:var(--bg); }
   .spinner { width:36px; height:36px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; }
   @keyframes spin { to { transform:rotate(360deg); } }
+  #loading-screen p { font-family:'Playfair Display',serif; font-size:1rem; color:var(--text-muted); letter-spacing:.03em; }
 
-  /* LOGIN */
+  /* ── LOGIN ── */
   #login-screen { min-height:100vh; display:none; align-items:center; justify-content:center; padding:24px; background:linear-gradient(160deg,#e8edf2 0%,#d4dde8 100%); }
-  .login-card { background:var(--surface); border-radius:16px; border:1px solid var(--border); padding:40px; width:100%; max-width:420px; box-shadow:var(--shadow-lg); }
+  .login-card { background:var(--surface); border-radius:16px; border:1px solid var(--border); padding:44px 40px; width:100%; max-width:420px; box-shadow:var(--shadow-lg); }
+  .login-brand { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+  .login-brand-icon { width:42px; height:42px; background:var(--accent); border-radius:10px; display:flex; align-items:center; justify-content:center; color:white; font-size:1.3rem; flex-shrink:0; }
+  .login-logo { font-family:'Playfair Display',serif; font-size:1.5rem; color:var(--text); line-height:1.1; }
+  .login-logo span { color:var(--accent); }
+  .login-sub { font-size:0.82rem; color:var(--text-muted); margin-bottom:32px; margin-top:4px; letter-spacing:.02em; }
   .login-tabs { display:flex; margin-bottom:24px; border-bottom:2px solid var(--border); }
-  .login-tab { padding:9px 20px; font-size:0.87rem; font-weight:600; color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; transition:all .2s; }
+  .login-tab { padding:9px 20px; font-size:0.87rem; font-weight:600; color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; transition:all .2s; letter-spacing:.02em; }
   .login-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
   .login-form { display:flex; flex-direction:column; gap:16px; }
+  .login-form label { font-size:0.73rem; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); margin-bottom:5px; display:block; }
+  .login-form input { width:100%; background:var(--bg); border:1.5px solid var(--border); border-radius:var(--radius); padding:11px 14px; font-family:'Source Sans 3',sans-serif; font-size:0.97rem; color:var(--text); transition:border-color .2s,box-shadow .2s; }
+  .login-form input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-light); }
+  .login-hint { font-size:0.76rem; color:var(--text-light); margin-top:-8px; }
+  .login-btn { background:var(--accent); color:white; border:none; border-radius:var(--radius); padding:13px; font-family:'Source Sans 3',sans-serif; font-size:0.95rem; font-weight:600; cursor:pointer; transition:all .2s; margin-top:4px; letter-spacing:.02em; }
+  .login-btn:hover { background:var(--accent-dark); transform:translateY(-1px); box-shadow:0 4px 14px rgba(37,99,168,.3); }
   .login-error { font-size:0.82rem; color:var(--danger); background:var(--danger-light); border-radius:6px; padding:9px 13px; display:none; border-left:3px solid var(--danger); }
   .login-error.show { display:block; }
 
-  /* APP HEADER */
-  header { background:var(--text); color:white; padding:0 24px; height:58px; position:sticky; top:0; z-index:100; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 12px rgba(0,0,0,.25); }
-  .header-title span { color:#7eb8f0; }
-  .stat-pill { background:rgba(255,255,255,.08); border-radius:8px; padding:6px 14px; text-align:center; min-width:80px; }
-  .stat-pill strong { display:block; font-size:1.2rem; }
+  /* ── APP ── */
+  #app-screen { display:none; }
 
-  /* TABS & SECTIONS */
-  .tabs { display:flex; background:var(--surface); border-bottom:2px solid var(--border); padding:0 20px; overflow-x:auto; }
-  .tab { padding:14px 20px; font-size:0.87rem; font-weight:600; color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap; }
+  /* HEADER */
+  header { background:var(--text); color:white; padding:0 24px; height:58px; position:sticky; top:0; z-index:100; display:flex; align-items:center; justify-content:space-between; gap:16px; box-shadow:0 2px 12px rgba(0,0,0,.25); }
+  .header-title { font-family:'Playfair Display',serif; font-size:1.1rem; letter-spacing:.01em; line-height:1; white-space:nowrap; }
+  .header-title span { color:#7eb8f0; }
+  .header-title small { display:block; font-family:'Source Sans 3',sans-serif; font-size:0.62rem; color:rgba(255,255,255,.4); font-weight:400; letter-spacing:.06em; margin-top:2px; text-transform:uppercase; }
+  .header-right { display:flex; align-items:center; gap:12px; flex-shrink:0; }
+  .header-stats { display:flex; gap:8px; }
+  .stat-pill { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); border-radius:8px; padding:6px 14px; text-align:center; cursor:default; min-width:80px; }
+  .stat-pill strong { display:block; font-family:'Playfair Display',serif; font-size:1.3rem; font-weight:700; color:white; line-height:1.1; }
+  .stat-pill .pill-label { font-size:0.62rem; text-transform:uppercase; letter-spacing:.07em; color:rgba(255,255,255,.5); margin-top:1px; }
+  .stat-pill.pend strong { color:#93c5fd; }
+  .stat-pill.done strong { color:#6ee7b7; }
+
+  /* user menu */
+  .user-menu-wrap { position:relative; }
+  .user-badge { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); border-radius:8px; padding:7px 14px; font-size:0.82rem; color:rgba(255,255,255,.9); display:flex; align-items:center; gap:8px; cursor:pointer; transition:background .2s; user-select:none; white-space:nowrap; }
+  .user-badge:hover { background:rgba(255,255,255,.18); }
+  .udot { width:8px; height:8px; border-radius:50%; background:#6ee7b7; flex-shrink:0; }
+  .udot.admin { background:#fbbf24; }
+  .user-dropdown { position:absolute; right:0; top:calc(100% + 8px); background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:6px; min-width:200px; box-shadow:var(--shadow-lg); z-index:200; display:none; animation:dropIn .18s ease; }
+  .user-dropdown.open { display:block; }
+  @keyframes dropIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+  .dropdown-item { padding:9px 14px; border-radius:6px; font-size:0.87rem; cursor:pointer; color:var(--text); transition:background .15s; display:flex; align-items:center; gap:9px; }
+  .dropdown-item:hover { background:var(--surface2); }
+  .dropdown-item.danger { color:var(--danger); }
+  .dropdown-item.danger:hover { background:var(--danger-light); }
+  .dropdown-divider { height:1px; background:var(--border); margin:4px 0; }
+
+  /* TABS */
+  .tabs { display:flex; background:var(--surface); border-bottom:2px solid var(--border); padding:0 20px; overflow-x:auto; box-shadow:var(--shadow-sm); }
+  .tab { padding:14px 20px; font-size:0.87rem; font-weight:600; color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; transition:all .2s; white-space:nowrap; letter-spacing:.01em; }
   .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
-  main { padding:24px 20px; max-width:920px; margin:0 auto; }
+  .tab:hover:not(.active) { color:var(--text); }
+  .tab.tab-admin { color:var(--warning); }
+  .tab.tab-admin.active { color:var(--warning); border-bottom-color:#f59e0b; }
+
+  main { padding:24px 20px 90px; max-width:920px; margin:0 auto; }
   .section { display:none; }
   .section.active { display:block; }
 
-  /* CARDS */
-  .activity-card {
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg);
-    border-left:4px solid var(--accent); padding:14px 18px; display:grid;
-    grid-template-columns: 1fr auto auto; align-items:center; gap:18px; margin-bottom:10px;
+  /* FORM */
+  .form-card { background:var(--surface); border-radius:var(--radius-lg); border:1px solid var(--border); padding:24px; margin-bottom:22px; box-shadow:var(--shadow); }
+  .form-card h2 { font-family:'Playfair Display',serif; font-size:1.15rem; margin-bottom:20px; color:var(--text); display:flex; align-items:center; gap:10px; }
+  .form-card h2::before { content:''; display:inline-block; width:3px; height:22px; background:var(--accent); border-radius:2px; }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .form-grid .full { grid-column:1 / -1; }
+  label { display:block; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); margin-bottom:5px; }
+  select, input[type="text"], input[type="date"], input[type="email"], input[type="password"], textarea {
+    width:100%; background:var(--bg); border:1.5px solid var(--border); border-radius:var(--radius);
+    padding:10px 14px; font-family:'Source Sans 3',sans-serif; font-size:0.95rem; color:var(--text);
+    transition:border-color .2s,box-shadow .2s; appearance:none; -webkit-appearance:none;
   }
-  .activity-card.done-card { border-left-color:var(--success); background:#fafdfb; opacity: 0.8; }
+  select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a7080' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 13px center; padding-right:34px; }
+  select:focus, input:focus, textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-light); }
+  textarea { resize:vertical; min-height:72px; }
+  .btn { padding:10px 22px; border-radius:var(--radius); border:none; font-family:'Source Sans 3',sans-serif; font-size:0.88rem; font-weight:600; cursor:pointer; transition:all .2s; display:inline-flex; align-items:center; gap:7px; letter-spacing:.01em; }
+  .btn-primary { background:var(--accent); color:white; }
+  .btn-primary:hover { background:var(--accent-dark); transform:translateY(-1px); box-shadow:0 4px 12px rgba(37,99,168,.28); }
+  .btn-secondary { background:var(--surface2); color:var(--text); border:1.5px solid var(--border); }
+  .btn-secondary:hover { background:var(--border); }
+  .btn-sm { padding:6px 13px; font-size:0.8rem; border-radius:6px; }
+  .btn-danger { background:var(--danger-light); color:var(--danger); border:1.5px solid #fca5a5; }
+  .btn-danger:hover { background:#fca5a5; }
+  .btn-success { background:var(--success-light); color:var(--success); border:1.5px solid #6ee7b7; }
+  .btn-success:hover { background:#6ee7b7; }
+  .form-actions { display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; }
+
+  /* FILTERS */
+  .filters { background:var(--surface); border-radius:var(--radius-lg); border:1px solid var(--border); padding:14px 18px; margin-bottom:18px; display:flex; gap:14px; flex-wrap:wrap; align-items:center; box-shadow:var(--shadow-sm); }
+  .filters label { margin-bottom:0; white-space:nowrap; }
+  .filters select { min-width:160px; width:auto; }
+  .filter-group { display:flex; align-items:center; gap:8px; }
+
+  /* ── CARDS ── */
+  .activity-list { display:flex; flex-direction:column; gap:10px; }
+  .activity-card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    border-left:4px solid var(--accent);
+    padding:14px 18px;
+    display:grid;
+    grid-template-columns:1fr auto auto;
+    align-items:center;
+    gap:18px;
+    transition:box-shadow .18s, transform .18s;
+    box-shadow:var(--shadow-sm);
+  }
+  .activity-card:hover { box-shadow:var(--shadow); transform:translateY(-1px); }
+  .activity-card.done-card { border-left-color:var(--success); background:#fafdfb; }
+  .activity-card.urgent { border-left-color:#dc2626; }
+  .activity-card.soon { border-left-color:#d97706; }
+
+  /* card left */
+  .card-left { min-width:0; }
+  .card-title-text { font-family:'Playfair Display',serif; font-size:1rem; font-weight:600; color:var(--text); margin-bottom:4px; }
+  .card-unit { font-size:0.82rem; color:var(--text-muted); font-style:italic; }
+  .card-meta-row { display:flex; align-items:center; gap:20px; flex-wrap:wrap; font-size:0.84rem; color:var(--text-muted); margin-bottom:2px; }
+  .card-meta-item { display:flex; align-items:center; gap:4px; }
+  .card-meta-item strong { color:var(--text); font-weight:600; }
+  .card-note-text { font-size:0.82rem; color:var(--text-light); font-style:italic; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card-note-text::before { content:'Nota: '; font-weight:600; color:var(--text-muted); font-style:normal; }
+
+  /* card right - only urgency, no repeated text */
+  .card-status { text-align:right; flex-shrink:0; min-width:120px; }
+  .urgency-text { font-size:0.83rem; font-weight:500; color:var(--text-muted); }
   .urgency-text.red { color:#dc2626; font-weight:700; }
   .urgency-text.orange { color:#d97706; font-weight:700; }
+  .done-label { font-size:0.82rem; color:var(--success); font-weight:600; }
 
-  /* TOAST & MODAL */
-  .toast { position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(110px); background:var(--text); color:white; padding:12px 22px; border-radius:8px; z-index:9999; transition:0.3s; }
-  .toast.show { transform:translateX(-50%) translateY(0); }
-  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; z-index:1000; }
+  /* card actions */
+  .card-actions { display:flex; gap:6px; flex-shrink:0; }
+
+  /* user chip for admin view */
+  .chip-user { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:4px; font-size:0.73rem; font-weight:600; background:#e0f2fe; color:#0369a1; white-space:nowrap; margin-top:4px; }
+
+  /* EMPTY */
+  .empty-state { text-align:center; padding:56px 20px; color:var(--text-muted); background:var(--surface); border-radius:var(--radius-lg); border:1px solid var(--border); }
+  .empty-state .icon { font-size:2.8rem; margin-bottom:12px; opacity:.6; }
+  .empty-state p { font-size:0.9rem; }
+
+  /* MANAGE */
+  .manage-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  .manage-box { background:var(--surface); border-radius:var(--radius-lg); border:1px solid var(--border); padding:20px; box-shadow:var(--shadow-sm); }
+  .manage-box h3 { font-family:'Playfair Display',serif; font-size:1rem; margin-bottom:15px; color:var(--text); }
+  .manage-input-row { display:flex; gap:8px; margin-bottom:14px; }
+  .manage-input-row input { flex:1; }
+  .tag-list { display:flex; flex-wrap:wrap; gap:7px; }
+  .tag-item { display:inline-flex; align-items:center; gap:5px; background:var(--surface2); border:1px solid var(--border); border-radius:5px; padding:4px 9px; font-size:0.82rem; color:var(--text); }
+  .tag-remove { background:none; border:none; cursor:pointer; color:var(--text-light); font-size:1rem; line-height:1; padding:0; transition:color .2s; }
+  .tag-remove:hover { color:var(--danger); }
+
+  /* HISTORIAL */
+  .history-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px; }
+  .history-header h2 { font-family:'Playfair Display',serif; font-size:1.1rem; color:var(--text); }
+
+  /* ADMIN */
+  .admin-banner { background:linear-gradient(135deg,#fffbeb,#fef3c7); border:1px solid #fbbf24; border-radius:var(--radius-lg); padding:14px 20px; margin-bottom:20px; font-size:0.88rem; color:#78350f; font-weight:600; display:flex; align-items:center; gap:10px; }
+  .users-list { display:flex; flex-direction:column; gap:10px; margin-bottom:22px; }
+  .user-card { background:var(--surface); border-radius:var(--radius-lg); border:1px solid var(--border); padding:14px 20px; display:flex; align-items:center; justify-content:space-between; gap:14px; box-shadow:var(--shadow-sm); }
+  .user-info .user-name { font-weight:700; font-size:0.95rem; font-family:'Playfair Display',serif; }
+  .user-info .user-meta { font-size:0.78rem; color:var(--text-muted); margin-top:2px; }
+  .user-stats { display:flex; gap:10px; }
+  .user-stat { text-align:center; padding:7px 14px; border-radius:7px; }
+  .user-stat strong { display:block; font-size:1.1rem; font-weight:700; font-family:'Playfair Display',serif; }
+  .user-stat span { font-size:0.67rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; }
+  .user-stat.pend { background:var(--accent-light); }
+  .user-stat.pend strong { color:var(--accent); }
+  .user-stat.done2 { background:var(--success-light); }
+  .user-stat.done2 strong { color:var(--success); }
+  .admin-section-title { font-family:'Playfair Display',serif; font-size:1rem; margin:22px 0 12px; padding-top:22px; border-top:1px solid var(--border); color:var(--text); }
+  .admin-user-row { background:var(--surface); border-radius:var(--radius-lg); border:1px solid var(--border); padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:9px; }
+  .admin-user-actions { display:flex; gap:8px; flex-wrap:wrap; }
+
+  /* MODAL */
+  .modal-overlay { position:fixed; inset:0; background:rgba(28,43,58,.5); z-index:500; display:none; align-items:center; justify-content:center; padding:20px; }
   .modal-overlay.open { display:flex; }
-  .modal { background:white; padding:30px; border-radius:12px; width:90%; max-width:400px; }
+  .modal { background:var(--surface); border-radius:var(--radius-lg); padding:30px; width:100%; max-width:380px; box-shadow:var(--shadow-lg); border:1px solid var(--border); }
+  .modal h3 { font-family:'Playfair Display',serif; font-size:1.2rem; margin-bottom:20px; color:var(--text); }
+  .modal-form { display:flex; flex-direction:column; gap:14px; }
+  .modal-actions { display:flex; gap:10px; margin-top:20px; }
 
-  /* FORM ELEMENTS */
-  input, select, textarea { width:100%; padding:10px; border:1.5px solid var(--border); border-radius:8px; margin-top:5px; font-family:inherit; }
-  .btn { padding:10px 20px; border-radius:8px; border:none; cursor:pointer; font-weight:600; transition: 0.2s; }
-  .btn-primary { background:var(--accent); color:white; }
-  .btn-danger { background:var(--danger-light); color:var(--danger); }
+  /* SYNC */
+  .sync-dot { width:8px; height:8px; border-radius:50%; background:#6ee7b7; display:inline-block; margin-right:5px; vertical-align:middle; }
+  .sync-dot.syncing { background:#fbbf24; animation:pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
-  @media(max-width:640px){ .activity-card { grid-template-columns: 1fr; } }
+  /* TOAST */
+  .toast { position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(110px); background:var(--text); color:white; padding:12px 22px; border-radius:8px; font-size:0.85rem; font-weight:600; z-index:9999; transition:transform .3s cubic-bezier(.34,1.56,.64,1); white-space:nowrap; box-shadow:var(--shadow-lg); border-left:4px solid var(--accent); }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+
+  @media(max-width:640px){
+    .form-grid { grid-template-columns:1fr; }
+    .manage-grid { grid-template-columns:1fr; }
+    header { padding:0 14px; height:52px; }
+    .header-stats { gap:5px; }
+    .stat-pill { padding:5px 10px; min-width:60px; }
+    .stat-pill strong { font-size:1.1rem; }
+    .header-title { font-size:.95rem; }
+    .activity-card { grid-template-columns:1fr; gap:10px; }
+    .card-status { text-align:left; }
+    .user-badge span:last-child { display:none; }
+  }
 </style>
 </head>
 <body>
 
-<div id="loading-screen"><div class="spinner"></div><p>Cargando...</p></div>
+<!-- LOADING -->
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <p>Cargando...</p>
+</div>
 
+<!-- LOGIN -->
 <div id="login-screen">
   <div class="login-card">
-    <h2 style="font-family:'Playfair Display'; margin-bottom:10px;">Mis <span>Actividades</span></h2>
+    <div class="login-brand">
+      <div class="login-brand-icon">📚</div>
+      <div class="login-logo">Mis <span>Actividades</span><br><span style="font-size:.65rem;font-family:'Source Sans 3',sans-serif;color:var(--text-muted);font-weight:400;letter-spacing:.04em;">de Estudio</span></div>
+    </div>
+    <div class="login-sub">Gestión Académica · Facultad</div>
     <div class="login-tabs">
-      <div class="login-tab active" onclick="switchLoginTab('login')">Ingresar</div>
-      <div class="login-tab" onclick="switchLoginTab('register')">Registrarse</div>
+      <div class="login-tab active" id="ltab-login" onclick="switchLoginTab('login')">Ingresar</div>
+      <div class="login-tab" id="ltab-register" onclick="switchLoginTab('register')">Registrarse</div>
     </div>
+
+    <!-- LOGIN PANEL -->
     <div id="login-panel" class="login-form">
-      <input type="text" id="l-user" placeholder="Usuario">
-      <input type="password" id="l-pin" placeholder="PIN (4-6 dígitos)" maxlength="6">
+      <!-- mode toggle -->
+      <div style="display:flex;gap:0;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:2px;">
+        <button id="mode-user-btn" onclick="setLoginMode('user')" style="flex:1;padding:9px;border:none;font-family:'Source Sans 3',sans-serif;font-size:.84rem;font-weight:600;cursor:pointer;background:var(--accent);color:white;transition:all .2s;">👤 Usuario</button>
+        <button id="mode-admin-btn" onclick="setLoginMode('admin')" style="flex:1;padding:9px;border:none;font-family:'Source Sans 3',sans-serif;font-size:.84rem;font-weight:600;cursor:pointer;background:var(--surface2);color:var(--text-muted);transition:all .2s;">⭐ Administrador</button>
+      </div>
+
+      <!-- user mode -->
+      <div id="mode-user-fields">
+        <div>
+          <label>Nombre de usuario</label>
+          <input type="text" id="l-user" placeholder="Tu nombre de usuario" autocomplete="username">
+        </div>
+        <div>
+          <label>PIN (4–6 dígitos)</label>
+          <input type="password" id="l-pin" placeholder="••••••" maxlength="6" inputmode="numeric" autocomplete="current-password">
+        </div>
+      </div>
+
+      <!-- admin mode -->
+      <div id="mode-admin-fields" style="display:none;">
+        <div>
+          <label>Email de administrador</label>
+          <input type="email" id="l-email" placeholder="tu@email.com" autocomplete="username">
+        </div>
+        <div>
+          <label>Contraseña</label>
+          <input type="password" id="l-pass" placeholder="Tu contraseña" autocomplete="current-password">
+        </div>
+      </div>
+
       <div class="login-error" id="login-error"></div>
-      <button class="btn btn-primary" onclick="window.doLogin()">Entrar →</button>
+      <button class="login-btn" onclick="doLogin()">Ingresar →</button>
     </div>
+
+    <!-- REGISTER PANEL -->
     <div id="register-panel" class="login-form" style="display:none">
-      <input type="text" id="r-name" placeholder="Nombre completo">
-      <input type="text" id="r-user" placeholder="Usuario (ej: diego92)">
-      <input type="password" id="r-pin" placeholder="PIN" maxlength="6">
+      <div>
+        <label>Nombre completo</label>
+        <input type="text" id="r-name" placeholder="Ej: Diego García">
+      </div>
+      <div>
+        <label>Nombre de usuario</label>
+        <input type="text" id="r-user" placeholder="Sin espacios, ej: diego92">
+        <p class="login-hint">Solo letras, números y guiones bajos.</p>
+      </div>
+      <div>
+        <label>PIN (4–6 dígitos)</label>
+        <input type="password" id="r-pin" placeholder="Elegí un PIN numérico" maxlength="6" inputmode="numeric" autocomplete="new-password">
+        <p class="login-hint">Solo vos lo sabés. No se guarda tu email ni datos personales.</p>
+      </div>
       <div class="login-error" id="register-error"></div>
-      <button class="btn btn-primary" onclick="window.doRegister()">Crear Cuenta</button>
+      <button class="login-btn" onclick="doRegister()">Crear cuenta →</button>
     </div>
   </div>
 </div>
 
+<!-- CHANGE PASSWORD MODAL -->
+<div class="modal-overlay" id="modal-pass">
+  <div class="modal">
+    <h3>Cambiar PIN</h3>
+    <div class="modal-form">
+      <div><label>Nuevo PIN</label><input type="password" id="new-pass1" placeholder="4–6 dígitos" maxlength="6" inputmode="numeric"></div>
+      <div><label>Confirmar PIN</label><input type="password" id="new-pass2" placeholder="Repetir PIN" maxlength="6" inputmode="numeric"></div>
+      <div class="login-error" id="pass-error"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="doChangePass()">Guardar</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-pass')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN RESET MODAL -->
+<div class="modal-overlay" id="modal-admin-pass">
+  <div class="modal">
+    <h3>Resetear PIN de usuario</h3>
+    <p style="font-size:.86rem;color:var(--text-muted);margin-bottom:14px;">Nuevo PIN temporal para el usuario:</p>
+    <p id="admin-reset-name" style="font-family:'Playfair Display',serif;font-size:1rem;margin-bottom:16px;color:var(--text);"></p>
+    <div><label>Nuevo PIN temporal</label><input type="text" id="admin-new-pin" placeholder="4–6 dígitos" maxlength="6" inputmode="numeric"></div>
+    <div class="login-error" id="admin-pass-error" style="margin-top:10px;"></div>
+    <div class="modal-actions" style="margin-top:16px;">
+      <button class="btn btn-primary" onclick="doAdminResetPass()">Guardar</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-admin-pass')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
 <div id="app-screen">
   <header>
-    <div class="header-title">Estudios <span>UTN</span></div>
-    <div style="display:flex; gap:10px;">
-      <div class="stat-pill"><strong id="stat-pending">0</strong><small>Pendientes</small></div>
-      <button class="btn btn-danger" onclick="window.doLogout()" style="padding:5px 10px;">Salir</button>
+    <div class="header-title">
+      Mis <span>Actividades</span> de Estudio
+      <small>Gestión Académica · Facultad</small>
+    </div>
+    <div class="header-right">
+      <div class="header-stats">
+        <div class="stat-pill pend">
+          <strong id="stat-pending">0</strong>
+          <div class="pill-label">Pendientes</div>
+        </div>
+        <div class="stat-pill done">
+          <strong id="stat-done">0</strong>
+          <div class="pill-label">Finalizadas</div>
+        </div>
+      </div>
+      <div class="user-menu-wrap">
+        <div class="user-badge" onclick="toggleDropdown()">
+          <span class="udot" id="udot"></span>
+          <span id="user-label">—</span>
+          <span style="opacity:.45;font-size:.72rem">▾</span>
+        </div>
+        <div class="user-dropdown" id="user-dropdown">
+          <div class="dropdown-item" id="change-pass-item" onclick="openModal('modal-pass')">🔑 Cambiar PIN</div>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-item danger" onclick="doLogout()">↩ Cerrar sesión</div>
+        </div>
+      </div>
     </div>
   </header>
 
-  <nav class="tabs">
-    <div class="tab active" onclick="showTab('pendientes')">Pendientes</div>
-    <div class="tab" onclick="showTab('nueva')">＋ Nueva</div>
-    <div class="tab" onclick="showTab('historial')">Historial</div>
-  </nav>
+  <div class="tabs" id="main-tabs">
+    <div class="tab" data-tab="nueva">＋ Agregar Actividad</div>
+    <div class="tab active" data-tab="pendientes">Pendientes</div>
+    <div class="tab" data-tab="historial">Finalizadas</div>
+    <div class="tab" data-tab="gestionar">Personalizar Opciones</div>
+  </div>
 
   <main>
-    <div id="tab-pendientes" class="section active">
-      <div id="list-pendientes"></div>
-    </div>
 
-    <div id="tab-nueva" class="section">
-      <div class="modal" style="max-width:100%; box-shadow:none;">
-        <h3>Nueva Actividad</h3>
-        <select id="f-materia"></select>
-        <select id="f-tarea"></select>
-        <input type="date" id="f-fecha-fin">
-        <textarea id="f-notas" placeholder="Notas..."></textarea>
-        <button class="btn btn-primary" onclick="window.agregarActividad()" style="margin-top:10px;">Guardar</button>
+    <!-- AGREGAR -->
+    <div class="section" id="tab-nueva">
+      <div class="form-card">
+        <h2>Agregar actividad</h2>
+        <div class="form-grid">
+          <div><label>Materia</label><select id="f-materia"><option value="">— Elegir —</option></select></div>
+          <div><label>Unidad</label><select id="f-unidad"><option value="">— Elegir —</option></select></div>
+          <div><label>Tipo de tarea</label><select id="f-tarea"><option value="">— Elegir —</option></select></div>
+          <div><label>Estado</label><select id="f-estado"><option value="pendiente">⏳ Pendiente</option><option value="realizado">✅ Finalizado</option></select></div>
+          <div><label>Fecha inicio</label><input type="date" id="f-fecha-inicio"></div>
+          <div><label>Fecha límite / entrega</label><input type="date" id="f-fecha-fin"></div>
+          <div class="full"><label>Notas / detalles</label><textarea id="f-notas" placeholder="Detalles adicionales..."></textarea></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="agregarActividad()">✓ Guardar actividad</button>
+          <button class="btn btn-secondary" onclick="limpiarForm()">✕ Limpiar</button>
+        </div>
       </div>
     </div>
 
-    <div id="tab-historial" class="section">
+    <!-- PENDIENTES -->
+    <div class="section active" id="tab-pendientes">
+      <div class="filters">
+        <div class="filter-group"><label>Materia:</label><select id="fil-materia" onchange="renderPendientes()"><option value="">Todas</option></select></div>
+        <div class="filter-group"><label>Tarea:</label><select id="fil-tarea" onchange="renderPendientes()"><option value="">Todas</option></select></div>
+      </div>
+      <div id="list-pendientes"></div>
+    </div>
+
+    <!-- FINALIZADAS -->
+    <div class="section" id="tab-historial">
+      <div class="history-header">
+        <h2>Actividades finalizadas</h2>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <div class="filter-group"><label>Materia:</label><select id="fil-hist-materia" onchange="renderHistorial()"><option value="">Todas</option></select></div>
+          <button class="btn btn-danger btn-sm" onclick="borrarHistorial()">🗑 Borrar historial</button>
+        </div>
+      </div>
       <div id="list-historial"></div>
     </div>
+
+    <!-- PERSONALIZAR OPCIONES -->
+    <div class="section" id="tab-gestionar">
+      <div class="manage-grid">
+        <div class="manage-box">
+          <h3>📚 Materias</h3>
+          <div class="manage-input-row"><input type="text" id="new-materia" placeholder="Nueva materia..."><button class="btn btn-primary btn-sm" onclick="agregarItem('materias','new-materia')">+</button></div>
+          <div class="tag-list" id="tags-materias"></div>
+        </div>
+        <div class="manage-box">
+          <h3>📋 Tipos de tarea</h3>
+          <div class="manage-input-row"><input type="text" id="new-tarea" placeholder="Tipo de tarea..."><button class="btn btn-primary btn-sm" onclick="agregarItem('tareas','new-tarea')">+</button></div>
+          <div class="tag-list" id="tags-tareas"></div>
+        </div>
+        <div class="manage-box">
+          <h3>🔢 Unidades</h3>
+          <div class="manage-input-row"><input type="text" id="new-unidad" placeholder="Ej: 1.1, 2.3..."><button class="btn btn-primary btn-sm" onclick="agregarItem('unidades','new-unidad')">+</button></div>
+          <div class="tag-list" id="tags-unidades"></div>
+        </div>
+      </div>
+      <p style="font-size:.76rem;color:var(--text-muted);margin-top:16px;">
+        <span class="sync-dot" id="sync-dot"></span> Cambios sincronizados automáticamente en todos los dispositivos.
+      </p>
+    </div>
+
+    <!-- ADMIN -->
+    <div class="section" id="tab-admin">
+      <div class="admin-banner">⭐ Panel de Administrador — acceso completo a usuarios y actividades.</div>
+      <div class="filters">
+        <div class="filter-group"><label>Usuario:</label><select id="admin-fil-user" onchange="renderAdmin()"><option value="">Todos</option></select></div>
+        <div class="filter-group"><label>Estado:</label><select id="admin-fil-estado" onchange="renderAdmin()"><option value="">Todos</option><option value="pendiente">Pendientes</option><option value="realizado">Finalizados</option></select></div>
+      </div>
+      <div class="users-list" id="admin-summary"></div>
+      <div id="list-admin"></div>
+      <div class="admin-section-title">👥 Gestión de usuarios</div>
+      <div id="admin-users-mgmt"></div>
+    </div>
+
   </main>
 </div>
 
@@ -144,10 +484,15 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+         signOut, onAuthStateChanged, updateProfile, updatePassword }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc,
+         collection, query, where, onSnapshot, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const FB_CONFIG = {
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const FB = {
   apiKey:"AIzaSyASirufR-TWJvDgtXhLVNPgMUYbgzi0uH4",
   authDomain:"gestor-de-actividades-c54dc.firebaseapp.com",
   projectId:"gestor-de-actividades-c54dc",
@@ -155,127 +500,412 @@ const FB_CONFIG = {
   messagingSenderId:"314631742893",
   appId:"1:314631742893:web:1d1eca28551301c67eed24"
 };
-
-const app = initializeApp(FB_CONFIG);
-const auth = getAuth(app);
-const db = getFirestore(app);
+const ADMIN_EMAIL = "diegojarguello@gmail.com";
+// Internal email domain — users never see this
 const FAKE_DOMAIN = "@actividades-app.internal";
 
-let currentUser = null;
-const listas = {
-  materias: ['Administración', 'Comportamiento Org.', 'Informática', 'Estadística', 'Economía'],
-  tareas: ['Foro', 'Cuestionario', 'Trabajo Práctico', 'Parcial', 'Lectura']
-};
+const app  = initializeApp(FB);
+const auth = getAuth(app);
+const db   = getFirestore(app);
 
-// --- AUTH FUNCTIONS ---
-window.switchLoginTab = (tab) => {
-  document.getElementById('login-panel').style.display = tab === 'login' ? 'flex' : 'none';
-  document.getElementById('register-panel').style.display = tab === 'register' ? 'flex' : 'none';
-};
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let me=null, isAdmin=false, myUsername='';
+let listas={materias:['Administracion','Comportamiento Organizacional','Informatica','Estadistica','Economia 2'],tareas:['Foro','Cuestionario','Trabajo Practico','Parcial','Final','Lectura','Ejercicios'],unidades:['1.1','1.2','1.3','2.1','2.2','2.3','3.1','3.2','4.1','4.2','5.1','5.2','6.1','7.1','7.5']};
+let myActs=[], allActs=[];
+let unsubActs=null, unsubListas=null, unsubAdmin=null;
+let adminResetUid=null, adminResetUsername=null;
 
-window.doLogin = async () => {
-  const user = document.getElementById('l-user').value + FAKE_DOMAIN;
-  const pin = document.getElementById('l-pin').value;
-  try {
-    await signInWithEmailAndPassword(auth, user, pin);
-  } catch (e) { alert("Error: Usuario o PIN incorrectos"); }
-};
+// ── USERNAME → EMAIL CONVERSION ───────────────────────────────────────────────
+// Users log in with username+PIN. Internally we store username@fake-domain as email.
+function toEmail(username){ return username.trim().toLowerCase() + FAKE_DOMAIN; }
+function fromEmail(email){ return email.replace(FAKE_DOMAIN,''); }
 
-window.doRegister = async () => {
-  const name = document.getElementById('r-name').value;
-  const user = document.getElementById('r-user').value.toLowerCase() + FAKE_DOMAIN;
-  const pin = document.getElementById('r-pin').value;
-  if(pin.length < 4) return alert("PIN muy corto");
-  try {
-    const res = await createUserWithEmailAndPassword(auth, user, pin);
-    await setDoc(doc(db, "users", res.user.uid), { name, user });
-  } catch (e) { alert("Error al registrar"); }
-};
-
-window.doLogout = () => signOut(auth);
-
-// --- APP LOGIC ---
-onAuthStateChanged(auth, user => {
-  document.getElementById('loading-screen').style.display = 'none';
-  if(user) {
-    currentUser = user;
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app-screen').style.display = 'block';
-    loadSelectors();
-    initDataListener();
+// ── AUTH LISTENER ─────────────────────────────────────────────────────────────
+onAuthStateChanged(auth, async user=>{
+  if(user){
+    me=user; isAdmin=user.email===ADMIN_EMAIL;
+    // get display name from Firestore if missing
+    if(!me.displayName){
+      const snap=await getDoc(doc(db,'users',me.uid));
+      if(snap.exists()) await updateProfile(me,{displayName:snap.data().name});
+    }
+    myUsername=fromEmail(me.email);
+    initApp();
   } else {
-    document.getElementById('app-screen').style.display = 'none';
-    document.getElementById('login-screen').style.display = 'flex';
+    me=null; isAdmin=false; myUsername='';
+    showScreen('login');
   }
 });
 
-function loadSelectors() {
-  const matSel = document.getElementById('f-materia');
-  const tarSel = document.getElementById('f-tarea');
-  matSel.innerHTML = listas.materias.map(m => `<option value="${m}">${m}</option>`).join('');
-  tarSel.innerHTML = listas.tareas.map(t => `<option value="${t}">${t}</option>`).join('');
+function showScreen(s){
+  document.getElementById('loading-screen').style.display=s==='loading'?'flex':'none';
+  document.getElementById('login-screen').style.display=s==='login'?'flex':'none';
+  document.getElementById('app-screen').style.display=s==='app'?'block':'none';
 }
 
-window.showTab = (tabId) => {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('tab-' + tabId).classList.add('active');
-  event.target.classList.add('active');
+// ── LOGIN / REGISTER ──────────────────────────────────────────────────────────
+window.switchLoginTab=t=>{
+  document.getElementById('ltab-login').classList.toggle('active',t==='login');
+  document.getElementById('ltab-register').classList.toggle('active',t==='register');
+  document.getElementById('login-panel').style.display=t==='login'?'flex':'none';
+  document.getElementById('register-panel').style.display=t==='register'?'flex':'none';
 };
 
-window.agregarActividad = async () => {
-  const data = {
-    uid: currentUser.uid,
-    materia: document.getElementById('f-materia').value,
-    tarea: document.getElementById('f-tarea').value,
-    fechaFin: document.getElementById('f-fecha-fin').value,
-    notas: document.getElementById('f-notas').value,
-    estado: 'pendiente',
-    createdAt: serverTimestamp()
-  };
-  await addDoc(collection(db, "actividades"), data);
-  showToast("¡Actividad guardada!");
-  showTab('pendientes');
+let loginMode = 'user'; // 'user' or 'admin'
+window.setLoginMode = (mode) => {
+  loginMode = mode;
+  document.getElementById('mode-user-fields').style.display = mode==='user' ? 'contents' : 'none';
+  document.getElementById('mode-admin-fields').style.display = mode==='admin' ? 'contents' : 'none';
+  document.getElementById('mode-user-btn').style.background = mode==='user' ? 'var(--accent)' : 'var(--surface2)';
+  document.getElementById('mode-user-btn').style.color = mode==='user' ? 'white' : 'var(--text-muted)';
+  document.getElementById('mode-admin-btn').style.background = mode==='admin' ? 'var(--accent)' : 'var(--surface2)';
+  document.getElementById('mode-admin-btn').style.color = mode==='admin' ? 'white' : 'var(--text-muted)';
+  document.getElementById('login-error').classList.remove('show');
 };
 
-function initDataListener() {
-  const q = query(collection(db, "actividades"), where("uid", "==", currentUser.uid));
-  onSnapshot(q, snapshot => {
-    const acts = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-    renderList(acts.filter(a => a.estado === 'pendiente'), 'list-pendientes');
-    renderList(acts.filter(a => a.estado === 'realizado'), 'list-historial');
-    document.getElementById('stat-pending').innerText = acts.filter(a => a.estado === 'pendiente').length;
+window.doLogin=async()=>{
+  const err=document.getElementById('login-error'); err.classList.remove('show');
+  try{
+    if(loginMode==='admin'){
+      // Admin logs in with real email + password
+      const email=document.getElementById('l-email').value.trim();
+      const pass=document.getElementById('l-pass').value;
+      if(!email||!pass){err.textContent='Completá email y contraseña.';err.classList.add('show');return;}
+      await signInWithEmailAndPassword(auth, email, pass);
+    } else {
+      // Regular user logs in with username + PIN
+      const username=document.getElementById('l-user').value.trim();
+      const pin=document.getElementById('l-pin').value;
+      if(!username||!pin){err.textContent='Completá usuario y PIN.';err.classList.add('show');return;}
+      await signInWithEmailAndPassword(auth, toEmail(username), pin);
+    }
+  }catch(e){
+    err.textContent=xlate(e.code);err.classList.add('show');
+  }
+};
+
+window.doRegister=async()=>{
+  const err=document.getElementById('register-error'); err.classList.remove('show');
+  const name=document.getElementById('r-name').value.trim();
+  const username=document.getElementById('r-user').value.trim().toLowerCase();
+  const pin=document.getElementById('r-pin').value;
+  if(!name){err.textContent='Ingresá tu nombre.';err.classList.add('show');return;}
+  if(!username||!/^[a-z0-9_]+$/.test(username)){err.textContent='Usuario inválido (solo letras, números y _).';err.classList.add('show');return;}
+  if(pin.length<4||!/^\d+$/.test(pin)){err.textContent='El PIN debe tener 4–6 dígitos numéricos.';err.classList.add('show');return;}
+  try{
+    const c=await createUserWithEmailAndPassword(auth, toEmail(username), pin);
+    await updateProfile(c.user,{displayName:name});
+    await setDoc(doc(db,'users',c.user.uid),{email:toEmail(username),username,name,createdAt:serverTimestamp()});
+  }catch(e){
+    if(e.code==='auth/email-already-in-use') err.textContent='Ese nombre de usuario ya está en uso.';
+    else err.textContent=xlate(e.code);
+    err.classList.add('show');
+  }
+};
+
+window.doLogout=async()=>{
+  if(!confirm('¿Cerrar sesión?'))return;
+  [unsubActs,unsubListas,unsubAdmin].forEach(u=>u&&u());
+  await signOut(auth);
+};
+
+// Change PIN / Password
+window.doChangePass=async()=>{
+  const p1=document.getElementById('new-pass1').value;
+  const p2=document.getElementById('new-pass2').value;
+  const err=document.getElementById('pass-error'); err.classList.remove('show');
+  if(isAdmin){
+    if(p1.length<6){err.textContent='Mínimo 6 caracteres.';err.classList.add('show');return;}
+  } else {
+    if(p1.length<4||!/^\d+$/.test(p1)){err.textContent='El PIN debe tener 4–6 dígitos numéricos.';err.classList.add('show');return;}
+  }
+  if(p1!==p2){err.textContent='No coinciden.';err.classList.add('show');return;}
+  try{
+    await updatePassword(me,p1);
+    closeModal('modal-pass');
+    document.getElementById('new-pass1').value='';
+    document.getElementById('new-pass2').value='';
+    toast(isAdmin?'✓ Contraseña actualizada':'✓ PIN actualizado');
+  }catch(e){
+    if(e.code==='auth/requires-recent-login') err.textContent='Por seguridad cerrá sesión y volvé a ingresar antes de cambiar.';
+    else err.textContent=xlate(e.code);
+    err.classList.add('show');
+  }
+};
+
+// Admin reset PIN
+window.openAdminReset=(uid,username)=>{
+  adminResetUid=uid; adminResetUsername=username;
+  document.getElementById('admin-reset-name').textContent=username;
+  document.getElementById('admin-new-pin').value='';
+  document.getElementById('admin-pass-error').classList.remove('show');
+  openModal('modal-admin-pass');
+};
+window.doAdminResetPass=async()=>{
+  const pin=document.getElementById('admin-new-pin').value;
+  const err=document.getElementById('admin-pass-error'); err.classList.remove('show');
+  if(pin.length<4||!/^\d+$/.test(pin)){err.textContent='PIN debe tener 4–6 dígitos.';err.classList.add('show');return;}
+  // Store new PIN in Firestore so user can be re-authenticated (admin sets it, user uses it)
+  await setDoc(doc(db,'admin_pins',adminResetUid),{pin,username:adminResetUsername,setAt:serverTimestamp()});
+  closeModal('modal-admin-pass');
+  toast(`PIN temporal guardado para ${adminResetUsername}. El usuario deberá usar el nuevo PIN.`);
+  adminResetUid=null; adminResetUsername=null;
+};
+
+function xlate(c){return{'auth/invalid-email':'Usuario inválido.','auth/user-not-found':'Usuario no encontrado.','auth/wrong-password':'PIN incorrecto.','auth/email-already-in-use':'Ese usuario ya existe.','auth/weak-password':'El PIN debe tener al menos 6 dígitos.','auth/invalid-credential':'Usuario o PIN incorrecto.'}[c]||'Error: '+c;}
+
+// ── MODALS ────────────────────────────────────────────────────────────────────
+window.openModal=id=>document.getElementById(id).classList.add('open');
+window.closeModal=id=>document.getElementById(id).classList.remove('open');
+document.addEventListener('click',e=>{if(e.target.classList.contains('modal-overlay'))e.target.classList.remove('open');});
+
+// ── DROPDOWN ──────────────────────────────────────────────────────────────────
+window.toggleDropdown=()=>document.getElementById('user-dropdown').classList.toggle('open');
+document.addEventListener('click',e=>{if(!e.target.closest('.user-menu-wrap'))document.getElementById('user-dropdown')?.classList.remove('open');});
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+function initApp(){
+  showScreen('app');
+  const name=me.displayName||myUsername;
+  document.getElementById('user-label').textContent=isAdmin?`⭐ ${name}`:name;
+  if(isAdmin){
+    document.getElementById('udot').classList.add('admin');
+    document.getElementById('change-pass-item').textContent='🔑 Cambiar contraseña';
+    document.getElementById('modal-pass').querySelector('h3').textContent='Cambiar contraseña';
+    document.getElementById('new-pass1').placeholder='Nueva contraseña';
+    document.getElementById('new-pass2').placeholder='Repetir contraseña';
+    document.getElementById('new-pass1').removeAttribute('maxlength');
+    document.getElementById('new-pass1').removeAttribute('inputmode');
+    document.getElementById('new-pass2').removeAttribute('maxlength');
+    document.getElementById('new-pass2').removeAttribute('inputmode');
+  }
+
+  if(isAdmin&&!document.querySelector('.tab-admin')){
+    const t=document.createElement('div');
+    t.className='tab tab-admin';t.dataset.tab='admin';t.textContent='⭐ Admin';
+    t.addEventListener('click',()=>switchTab('admin'));
+    document.getElementById('main-tabs').appendChild(t);
+  }
+
+  unsubListas=onSnapshot(doc(db,'config','listas'),snap=>{
+    if(snap.exists())listas=snap.data();
+    refreshSelects();refreshAllTags();
+  },()=>{refreshSelects();refreshAllTags();});
+
+  unsubActs=onSnapshot(query(collection(db,'actividades'),where('uid','==',me.uid)),snap=>{
+    myActs=snap.docs.map(d=>({fid:d.id,...d.data()}));
+    myActs.sort((a,b)=>{
+      const fa=a.fechaFin||'9999-99-99',fb=b.fechaFin||'9999-99-99';
+      return fa<fb?-1:fa>fb?1:(b.creadoEn?.seconds||0)-(a.creadoEn?.seconds||0);
+    });
+    renderAll();
+  });
+
+  if(isAdmin){
+    unsubAdmin=onSnapshot(collection(db,'actividades'),snap=>{
+      allActs=snap.docs.map(d=>({fid:d.id,...d.data()})).sort((a,b)=>(b.creadoEn?.seconds||0)-(a.creadoEn?.seconds||0));
+      renderAdmin();
+    });
+  }
+
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
+  ['new-materia','new-tarea','new-unidad'].forEach((id,i)=>{
+    document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')agregarItem(['materias','tareas','unidades'][i],id);});
   });
 }
 
-function renderList(list, containerId) {
-  const container = document.getElementById(containerId);
-  if(list.length === 0) { container.innerHTML = "<p style='padding:20px; color:gray;'>No hay actividades.</p>"; return; }
-  
-  container.innerHTML = list.map(a => `
-    <div class="activity-card ${a.estado === 'realizado' ? 'done-card' : ''}">
-      <div>
-        <strong>${a.materia}</strong><br>
-        <small>${a.tarea} - ${a.fechaFin || 'Sin fecha'}</small>
+// ── LISTAS ────────────────────────────────────────────────────────────────────
+async function saveListas(){sync(true);await setDoc(doc(db,'config','listas'),listas).catch(console.error);sync(false);}
+window.agregarItem=async(key,inputId)=>{
+  const input=document.getElementById(inputId),val=input.value.trim();
+  if(!val)return;if(!listas[key])listas[key]=[];
+  if(listas[key].includes(val)){toast('Ya existe en la lista');return;}
+  listas[key].push(val);input.value='';toast(`"${val}" agregado ✓`);await saveListas();
+};
+window.eliminarItem=async(key,val)=>{
+  if(!confirm(`¿Eliminar "${val}"?`))return;
+  listas[key]=listas[key].filter(v=>v!==val);toast(`"${val}" eliminado`);await saveListas();
+};
+
+// ── ACTIVIDADES ───────────────────────────────────────────────────────────────
+window.agregarActividad=async()=>{
+  const materia=g('f-materia'),tarea=g('f-tarea');
+  if(!materia||!tarea){toast('⚠ Completá materia y tarea');return;}
+  sync(true);
+  await setDoc(doc(collection(db,'actividades')),{
+    uid:me.uid,userEmail:me.email,userName:me.displayName||myUsername,
+    materia,unidad:g('f-unidad'),tarea,estado:g('f-estado'),
+    fechaInicio:g('f-fecha-inicio'),fechaFin:g('f-fecha-fin'),notas:g('f-notas'),
+    creadoEn:serverTimestamp()
+  }).catch(e=>toast('⚠ Error: '+e.message));
+  sync(false);limpiarForm();toast('✓ Actividad guardada');
+  if(g('f-estado')==='pendiente')setTimeout(()=>switchTab('pendientes'),500);
+};
+window.limpiarForm=()=>{
+  ['f-materia','f-unidad','f-tarea','f-fecha-inicio','f-fecha-fin'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-estado').value='pendiente';
+  document.getElementById('f-notas').value='';
+};
+window.toggleEstado=async(fid)=>{
+  const act=myActs.find(a=>a.fid===fid);if(!act)return;
+  const ns=act.estado==='pendiente'?'realizado':'pendiente';
+  const upd={estado:ns};if(ns==='realizado')upd.fechaRealizado=new Date().toISOString().split('T')[0];
+  sync(true);await updateDoc(doc(db,'actividades',fid),upd);sync(false);
+  toast(ns==='realizado'?'✅ Marcada como finalizada':'⏳ Marcada como pendiente');
+};
+window.eliminarActividad=async(fid)=>{
+  if(!confirm('¿Eliminar esta actividad?'))return;
+  sync(true);await deleteDoc(doc(db,'actividades',fid));sync(false);toast('Actividad eliminada');
+};
+window.borrarHistorial=async()=>{
+  const fil=document.getElementById('fil-hist-materia').value;
+  const list=myActs.filter(a=>a.estado==='realizado'&&(!fil||a.materia===fil));
+  if(!list.length){toast('No hay historial para borrar');return;}
+  if(!confirm(`¿Borrar ${list.length} actividad(es)?`))return;
+  sync(true);await Promise.all(list.map(a=>deleteDoc(doc(db,'actividades',a.fid))));sync(false);toast('Historial borrado ✓');
+};
+
+// ── URGENCY ───────────────────────────────────────────────────────────────────
+function diffDays(fechaFin){
+  if(!fechaFin)return null;
+  const today=new Date();today.setHours(0,0,0,0);
+  const due=new Date(fechaFin+'T00:00:00');
+  return Math.round((due-today)/(1000*60*60*24));
+}
+function urgencyClass(fechaFin){
+  const d=diffDays(fechaFin);
+  if(d===null)return'';
+  if(d<=2)return'urgent';
+  if(d<=5)return'soon';
+  return'';
+}
+function urgencyText(fechaFin){
+  const d=diffDays(fechaFin);
+  if(d===null)return'';
+  if(d<0)return`<span class="urgency-text red">Vencida hace ${Math.abs(d)} día(s)</span>`;
+  if(d===0)return`<span class="urgency-text red">Vence hoy</span>`;
+  if(d===1)return`<span class="urgency-text red">Vence mañana</span>`;
+  if(d<=5)return`<span class="urgency-text orange">Vencimiento en ${d} días</span>`;
+  return`<span class="urgency-text">Vencimiento en ${d} días</span>`;
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function card(act,showUser=false){
+  const d=act.estado==='realizado',id=act.fid;
+  const urg=d?'':urgencyClass(act.fechaFin);
+  return `<div class="activity-card ${d?'done-card':'pending-card'} ${urg}">
+    <div class="card-left">
+      <div class="card-title-text">
+        ${act.materia} — ${act.tarea}
+        ${act.unidad?`<span class="card-unit">(Unidad: ${act.unidad})</span>`:''}
       </div>
-      <div>
-        ${a.estado === 'pendiente' ? 
-          `<button class="btn btn-primary" onclick="window.updateStatus('${a.id}', 'realizado')">✓</button>` : 
-          `<button class="btn btn-danger" onclick="window.deleteAct('${a.id}')">🗑</button>`
-        }
+      <div class="card-meta-row">
+        ${act.fechaInicio?`<span class="card-meta-item">Inicia <strong>${ff(act.fechaInicio)}</strong></span>`:''}
+        ${act.fechaFin?`<span class="card-meta-item">Finaliza ⏰ <strong>${ff(act.fechaFin)}</strong></span>`:''}
+        ${act.fechaRealizado?`<span class="card-meta-item">✓ <strong>${ff(act.fechaRealizado)}</strong></span>`:''}
+        ${showUser?`<span class="chip-user">👤 ${act.userName}</span>`:''}
       </div>
+      ${act.notas?`<div class="card-note-text">${act.notas}</div>`:''}
     </div>
-  `).join('');
+    <div class="card-status">
+      ${d
+        ? `<span class="done-label">✓ Finalizado</span>`
+        : urgencyText(act.fechaFin)
+      }
+    </div>
+    <div class="card-actions">
+      <button class="btn btn-sm ${d?'btn-secondary':'btn-success'}" onclick="toggleEstado('${id}')" title="${d?'Marcar pendiente':'Marcar finalizada'}">${d?'↩':'✓'}</button>
+      <button class="btn btn-sm btn-danger" onclick="eliminarActividad('${id}')" title="Eliminar">🗑</button>
+    </div>
+  </div>`;
 }
+function ff(f){if(!f)return'';const[y,m,d]=f.split('-');return`${d}/${m}/${y}`;}
+function empty(icon,msg){return`<div class="empty-state"><div class="icon">${icon}</div><p>${msg}</p></div>`;}
+function wrapList(html){return`<div class="activity-list">${html}</div>`;}
 
-window.updateStatus = (id, status) => updateDoc(doc(db, "actividades", id), { estado: status });
-window.deleteAct = (id) => confirm("¿Borrar permanentemente?") && deleteDoc(doc(db, "actividades", id));
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.innerText = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
+function renderPendientes(){
+  const fm=document.getElementById('fil-materia').value,ft=document.getElementById('fil-tarea').value;
+  let a=myActs.filter(x=>x.estado==='pendiente');
+  if(fm)a=a.filter(x=>x.materia===fm);if(ft)a=a.filter(x=>x.tarea===ft);
+  document.getElementById('list-pendientes').innerHTML=a.length?wrapList(a.map(x=>card(x)).join('')):empty('🎉','¡Sin actividades pendientes!');
 }
+function renderHistorial(){
+  const fm=document.getElementById('fil-hist-materia').value;
+  let a=myActs.filter(x=>x.estado==='realizado');
+  if(fm)a=a.filter(x=>x.materia===fm);
+  document.getElementById('list-historial').innerHTML=a.length?wrapList(a.map(x=>card(x)).join('')):empty('📂','No hay actividades finalizadas aún.');
+}
+function updateStats(){
+  document.getElementById('stat-pending').textContent=myActs.filter(a=>a.estado==='pendiente').length;
+  document.getElementById('stat-done').textContent=myActs.filter(a=>a.estado==='realizado').length;
+}
+function renderAll(){renderPendientes();renderHistorial();updateStats();}
+
+window.renderAdmin=()=>{
+  const fu=document.getElementById('admin-fil-user')?.value||'';
+  const fe=document.getElementById('admin-fil-estado')?.value||'';
+  const byUser={};
+  allActs.forEach(a=>{
+    if(!byUser[a.uid])byUser[a.uid]={name:a.userName,email:a.userEmail,uid:a.uid,p:0,d:0};
+    a.estado==='pendiente'?byUser[a.uid].p++:byUser[a.uid].d++;
+  });
+  const sel=document.getElementById('admin-fil-user');
+  if(sel){const pv=sel.value;sel.innerHTML='<option value="">Todos</option>';Object.values(byUser).forEach(u=>{const o=document.createElement('option');o.value=u.uid;o.textContent=u.name;sel.appendChild(o);});sel.value=pv;}
+  document.getElementById('admin-summary').innerHTML=Object.values(byUser).map(u=>`
+    <div class="user-card">
+      <div class="user-info"><div class="user-name">${u.name}</div><div class="user-meta">${fromEmail(u.email)}</div></div>
+      <div class="user-stats">
+        <div class="user-stat pend"><strong>${u.p}</strong><span>Pend.</span></div>
+        <div class="user-stat done2"><strong>${u.d}</strong><span>Final.</span></div>
+      </div>
+    </div>`).join('')||empty('👥','Sin usuarios aún.');
+  let a=[...allActs];if(fu)a=a.filter(x=>x.uid===fu);if(fe)a=a.filter(x=>x.estado===fe);
+  document.getElementById('list-admin').innerHTML=a.length?wrapList(a.map(x=>card(x,true)).join('')):empty('📋','Sin actividades.');
+  const mgmt=document.getElementById('admin-users-mgmt');
+  if(mgmt) mgmt.innerHTML=Object.values(byUser).map(u=>`
+    <div class="admin-user-row">
+      <div><div style="font-weight:700;font-size:.95rem;">${u.name}</div><div style="font-size:.78rem;color:var(--text-muted);">${fromEmail(u.email)}</div></div>
+      <div class="admin-user-actions">
+        <button class="btn btn-sm btn-secondary" onclick="openAdminReset('${u.uid}','${u.name}')">🔑 Resetear PIN</button>
+      </div>
+    </div>`).join('')||'<p style="font-size:.85rem;color:var(--text-muted)">No hay usuarios aún.</p>';
+};
+
+// ── SELECTS / TAGS ────────────────────────────────────────────────────────────
+function populate(id,arr,ph){
+  const el=document.getElementById(id);if(!el)return;
+  const pv=el.value;el.innerHTML=`<option value="">${ph}</option>`;
+  [...(arr||[])].sort().forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;el.appendChild(o);});
+  el.value=pv;
+}
+function refreshSelects(){
+  populate('f-materia',listas.materias,'— Elegir —');populate('f-unidad',listas.unidades,'— Elegir —');populate('f-tarea',listas.tareas,'— Elegir —');
+  populate('fil-materia',listas.materias,'Todas');populate('fil-tarea',listas.tareas,'Todas');populate('fil-hist-materia',listas.materias,'Todas');
+}
+function refreshTags(key,cid){
+  const c=document.getElementById(cid);if(!c)return;c.innerHTML='';
+  [...(listas[key]||[])].sort().forEach(v=>{
+    const t=document.createElement('div');t.className='tag-item';
+    t.innerHTML=`${v} <button class="tag-remove" onclick="eliminarItem('${key}','${v.replace(/'/g,"\\'")}')">×</button>`;
+    c.appendChild(t);
+  });
+}
+function refreshAllTags(){refreshTags('materias','tags-materias');refreshTags('tareas','tags-tareas');refreshTags('unidades','tags-unidades');}
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+window.switchTab=name=>{
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
+  document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id==='tab-'+name));
+  if(name==='gestionar')refreshAllTags();
+  if(name==='admin')renderAdmin();
+};
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function g(id){return document.getElementById(id)?.value||'';}
+function sync(on){const d=document.getElementById('sync-dot');if(d)d.classList.toggle('syncing',on);}
+let _tt;
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),2600);}
+window.toast=toast;
 </script>
 </body>
 </html>

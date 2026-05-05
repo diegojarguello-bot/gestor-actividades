@@ -135,58 +135,48 @@
   .filters select { min-width:160px; width:auto; }
   .filter-group { display:flex; align-items:center; gap:8px; }
 
-  /* ── CARDS (new style per image) ── */
-  .activity-list { display:flex; flex-direction:column; gap:0; border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; box-shadow:var(--shadow); background:var(--surface); }
+  /* ── CARDS ── */
+  .activity-list { display:flex; flex-direction:column; gap:10px; }
   .activity-card {
     background:var(--surface);
-    border-bottom:1px solid var(--border);
-    padding:16px 20px;
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    border-left:4px solid var(--accent);
+    padding:14px 18px;
     display:grid;
     grid-template-columns:1fr auto auto;
     align-items:center;
-    gap:16px;
-    transition:background .18s;
-    position:relative;
+    gap:18px;
+    transition:box-shadow .18s, transform .18s;
+    box-shadow:var(--shadow-sm);
   }
-  .activity-card:last-child { border-bottom:none; }
-  .activity-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--accent); }
-  .activity-card.done-card::before { background:var(--success); }
-  .activity-card.urgent::before { background:#dc2626; }
-  .activity-card.soon::before { background:#d97706; }
-  .activity-card:hover { background:#f7fafd; }
-  .activity-card.done-card { background:#fafdfb; }
-  .activity-card.done-card:hover { background:#f0faf5; }
+  .activity-card:hover { box-shadow:var(--shadow); transform:translateY(-1px); }
+  .activity-card.done-card { border-left-color:var(--success); background:#fafdfb; }
+  .activity-card.urgent { border-left-color:#dc2626; }
+  .activity-card.soon { border-left-color:#d97706; }
 
-  /* card left section */
-  .card-left { min-width:0; padding-left:4px; }
-  .card-main-row { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:5px; }
-  .card-title-text { font-family:'Playfair Display',serif; font-size:1.02rem; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  /* card left */
+  .card-left { min-width:0; }
+  .card-title-text { font-family:'Playfair Display',serif; font-size:1rem; font-weight:600; color:var(--text); margin-bottom:4px; }
   .card-unit { font-size:0.82rem; color:var(--text-muted); font-style:italic; }
-  .card-meta-row { display:flex; align-items:center; gap:18px; flex-wrap:wrap; font-size:0.83rem; color:var(--text-muted); }
-  .card-meta-item { display:flex; align-items:center; gap:5px; }
+  .card-meta-row { display:flex; align-items:center; gap:20px; flex-wrap:wrap; font-size:0.84rem; color:var(--text-muted); margin-bottom:2px; }
+  .card-meta-item { display:flex; align-items:center; gap:4px; }
   .card-meta-item strong { color:var(--text); font-weight:600; }
-  .card-note-text { font-size:0.82rem; color:var(--text-light); font-style:italic; margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card-note-text { font-size:0.82rem; color:var(--text-light); font-style:italic; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .card-note-text::before { content:'Nota: '; font-weight:600; color:var(--text-muted); font-style:normal; }
 
-  /* card status section */
-  .card-status { text-align:right; flex-shrink:0; }
-  .status-text { font-size:0.82rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; margin-bottom:3px; }
-  .status-text.pending { color:var(--accent); }
-  .status-text.done { color:var(--success); }
-  .urgency-text { font-size:0.78rem; color:var(--text-muted); }
-  .urgency-text.red { color:#dc2626; font-weight:600; }
-  .urgency-text.orange { color:#d97706; font-weight:600; }
+  /* card right - only urgency, no repeated text */
+  .card-status { text-align:right; flex-shrink:0; min-width:120px; }
+  .urgency-text { font-size:0.83rem; font-weight:500; color:var(--text-muted); }
+  .urgency-text.red { color:#dc2626; font-weight:700; }
+  .urgency-text.orange { color:#d97706; font-weight:700; }
+  .done-label { font-size:0.82rem; color:var(--success); font-weight:600; }
 
   /* card actions */
   .card-actions { display:flex; gap:6px; flex-shrink:0; }
 
-  /* badge chips */
-  .chip { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:4px; font-size:0.73rem; font-weight:600; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; }
-  .chip-materia { background:#dbeafe; color:#1e40af; }
-  .chip-tarea { background:#ede9fe; color:#5b21b6; }
-
-  /* standalone list fallback */
-  .activity-list-solo { display:flex; flex-direction:column; gap:11px; }
+  /* user chip for admin view */
+  .chip-user { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:4px; font-size:0.73rem; font-weight:600; background:#e0f2fe; color:#0369a1; white-space:nowrap; margin-top:4px; }
 
   /* EMPTY */
   .empty-state { text-align:center; padding:56px 20px; color:var(--text-muted); background:var(--surface); border-radius:var(--radius-lg); border:1px solid var(--border); }
@@ -805,23 +795,23 @@ function card(act,showUser=false){
   const urg=d?'':urgencyClass(act.fechaFin);
   return `<div class="activity-card ${d?'done-card':'pending-card'} ${urg}">
     <div class="card-left">
-      <div class="card-main-row">
-        <span class="card-title-text">${act.materia} — ${act.tarea}</span>
+      <div class="card-title-text">
+        ${act.materia} — ${act.tarea}
         ${act.unidad?`<span class="card-unit">(Unidad: ${act.unidad})</span>`:''}
-        <span class="chip chip-materia">${act.materia}</span>
-        <span class="chip chip-tarea">${act.tarea}</span>
-        ${showUser?`<span class="chip" style="background:#e0f2fe;color:#0369a1">👤 ${act.userName}</span>`:''}
       </div>
       <div class="card-meta-row">
         ${act.fechaInicio?`<span class="card-meta-item">Inicia <strong>${ff(act.fechaInicio)}</strong></span>`:''}
-        ${act.fechaFin?`<span class="card-meta-item">Finaliza <strong>⏰ ${ff(act.fechaFin)}</strong></span>`:''}
-        ${act.fechaRealizado?`<span class="card-meta-item">Finalizado <strong>✓ ${ff(act.fechaRealizado)}</strong></span>`:''}
+        ${act.fechaFin?`<span class="card-meta-item">Finaliza ⏰ <strong>${ff(act.fechaFin)}</strong></span>`:''}
+        ${act.fechaRealizado?`<span class="card-meta-item">✓ <strong>${ff(act.fechaRealizado)}</strong></span>`:''}
+        ${showUser?`<span class="chip-user">👤 ${act.userName}</span>`:''}
       </div>
       ${act.notas?`<div class="card-note-text">${act.notas}</div>`:''}
     </div>
     <div class="card-status">
-      <div class="status-text ${d?'done':'pending'}">Estado: ${d?'Finalizado':'Pendiente'}</div>
-      ${!d?urgencyText(act.fechaFin):''}
+      ${d
+        ? `<span class="done-label">✓ Finalizado</span>`
+        : urgencyText(act.fechaFin)
+      }
     </div>
     <div class="card-actions">
       <button class="btn btn-sm ${d?'btn-secondary':'btn-success'}" onclick="toggleEstado('${id}')" title="${d?'Marcar pendiente':'Marcar finalizada'}">${d?'↩':'✓'}</button>

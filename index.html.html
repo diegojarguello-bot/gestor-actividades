@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestor de Actividades — Facultad</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f2eb; --surface: #fffdf8; --surface2: #f0ede4; --border: #ddd8cc;
+    --text: #1a1714; --text-muted: #7a746a; --accent: #c8522a; --accent-light: #f5e8e2;
+    --accent2: #2a6b4a; --accent2-light: #e2f0e8; --pending: #c8522a; --done: #2a6b4a;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08); --shadow-lg: 0 8px 32px rgba(0,0,0,0.12); --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* LOADING */
+  #loading-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:16px; }
+  .spinner { width:36px; height:36px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.7s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* LOGIN */
+  #login-screen { min-height:100vh; display:none; align-items:center; justify-content:center; padding:20px; }
+  .login-card { background:var(--surface); border-radius:20px; border:1px solid var(--border); padding:36px 32px; width:100%; max-width:380px; box-shadow:var(--shadow-lg); }
+  .login-logo { font-family:'DM Serif Display',serif; font-size:1.8rem; margin-bottom:4px; }
+  .login-logo span { color:var(--accent); }
+  .login-sub { font-size:0.8rem; color:var(--text-muted); margin-bottom:28px; }
+  .login-tabs { display:flex; margin-bottom:20px; border-bottom:2px solid var(--border); }
+  .login-tab { padding:8px 16px; font-size:0.82rem; font-weight:600; color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; transition:all 0.2s; }
+  .login-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .login-form { display:flex; flex-direction:column; gap:14px; }
+  .login-form label { font-size:0.72rem; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:4px; display:block; }
+  .login-form input { width:100%; background:var(--bg); border:1.5px solid var(--border); border-radius:8px; padding:10px 13px; font-family:'DM Sans',sans-serif; font-size:0.93rem; color:var(--text); transition:border-color 0.2s; }
+  .login-form input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-light); }
+  .login-btn { background:var(--accent); color:white; border:none; border-radius:8px; padding:12px; font-family:'DM Sans',sans-serif; font-size:0.9rem; font-weight:600; cursor:pointer; transition:all 0.2s; margin-top:4px; }
+  .login-btn:hover { background:#b0421c; transform:translateY(-1px); }
+  .login-error { font-size:0.8rem; color:#991b1b; background:#fee2e2; border-radius:6px; padding:8px 12px; display:none; }
+  .login-error.show { display:block; }
+
+  /* APP */
+  #app-screen { display:none; }
+  header { background:var(--text); color:white; padding:16px 20px; position:sticky; top:0; z-index:100; display:flex; align-items:center; justify-content:space-between; gap:12px; box-shadow:0 4px 20px rgba(0,0,0,0.25); }
+  header h1 { font-family:'DM Serif Display',serif; font-size:1.4rem; letter-spacing:-0.02em; line-height:1; }
+  header h1 span { color:#f0c97a; }
+  .header-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .header-stats { display:flex; gap:8px; }
+  .stat-pill { background:rgba(255,255,255,0.1); border-radius:20px; padding:5px 10px; text-align:center; font-size:0.7rem; color:rgba(255,255,255,0.7); }
+  .stat-pill strong { display:block; font-size:1rem; font-weight:600; color:white; line-height:1; }
+  .stat-pill.pend strong { color:#f0a070; }
+  .stat-pill.done strong { color:#7ecf9e; }
+  .user-badge { background:rgba(255,255,255,0.15); border-radius:20px; padding:5px 12px; font-size:0.75rem; color:rgba(255,255,255,0.9); display:flex; align-items:center; gap:6px; cursor:pointer; transition:background 0.2s; }
+  .user-badge:hover { background:rgba(255,255,255,0.25); }
+  .udot { width:7px; height:7px; border-radius:50%; background:#7ecf9e; flex-shrink:0; }
+  .udot.admin { background:#f0c97a; }
+
+  .tabs { display:flex; background:var(--surface2); border-bottom:2px solid var(--border); padding:0 16px; overflow-x:auto; }
+  .tab { padding:13px 18px; font-size:0.82rem; font-weight:500; color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; transition:all 0.2s; white-space:nowrap; }
+  .tab.active { color:var(--accent); border-bottom-color:var(--accent); font-weight:600; }
+  .tab.tab-admin { color:#92400e; }
+  .tab.tab-admin.active { color:#92400e; border-bottom-color:#f0c97a; }
+
+  main { padding:20px 16px 80px; max-width:860px; margin:0 auto; }
+  .section { display:none; }
+  .section.active { display:block; }
+
+  .form-card { background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); padding:20px; margin-bottom:20px; box-shadow:var(--shadow); }
+  .form-card h2 { font-family:'DM Serif Display',serif; font-size:1.1rem; margin-bottom:16px; color:var(--text); display:flex; align-items:center; gap:8px; }
+  .form-card h2::before { content:''; display:inline-block; width:4px; height:18px; background:var(--accent); border-radius:2px; }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .form-grid .full { grid-column:1 / -1; }
+
+  label { display:block; font-size:0.73rem; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:5px; }
+  select, input[type="text"], input[type="date"], input[type="email"], input[type="password"], textarea { width:100%; background:var(--bg); border:1.5px solid var(--border); border-radius:8px; padding:10px 13px; font-family:'DM Sans',sans-serif; font-size:0.93rem; color:var(--text); transition:border-color 0.2s; appearance:none; -webkit-appearance:none; }
+  select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a746a' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:32px; }
+  select:focus, input:focus, textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-light); }
+  textarea { resize:vertical; min-height:70px; }
+
+  .btn { padding:11px 22px; border-radius:8px; border:none; font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:600; cursor:pointer; transition:all 0.2s; display:inline-flex; align-items:center; gap:6px; }
+  .btn-primary { background:var(--accent); color:white; }
+  .btn-primary:hover { background:#b0421c; transform:translateY(-1px); box-shadow:0 4px 12px rgba(200,82,42,0.3); }
+  .btn-secondary { background:var(--surface2); color:var(--text); border:1.5px solid var(--border); }
+  .btn-secondary:hover { background:var(--border); }
+  .btn-sm { padding:6px 12px; font-size:0.78rem; border-radius:6px; }
+  .btn-danger { background:#fee2e2; color:#991b1b; border:1.5px solid #fca5a5; }
+  .btn-danger:hover { background:#fca5a5; }
+  .btn-success { background:var(--accent2-light); color:var(--accent2); border:1.5px solid #86efac; }
+  .btn-success:hover { background:#86efac; }
+  .form-actions { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
+
+  .filters { background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); padding:14px 16px; margin-bottom:16px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .filters label { margin-bottom:0; white-space:nowrap; }
+  .filters select { min-width:140px; width:auto; }
+  .filter-group { display:flex; align-items:center; gap:6px; }
+
+  .activity-list { display:flex; flex-direction:column; gap:10px; }
+  .activity-card { background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); padding:14px 16px; display:flex; align-items:flex-start; gap:14px; box-shadow:var(--shadow); transition:box-shadow 0.2s,transform 0.2s; animation:slideIn 0.3s ease; }
+  @keyframes slideIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .activity-card:hover { box-shadow:var(--shadow-lg); transform:translateY(-1px); }
+  .activity-card.done-card { border-left:4px solid var(--done); opacity:0.82; }
+  .activity-card.pending-card { border-left:4px solid var(--pending); }
+  .card-check { width:22px; height:22px; border-radius:50%; border:2px solid var(--border); cursor:pointer; flex-shrink:0; margin-top:2px; display:flex; align-items:center; justify-content:center; transition:all 0.2s; background:white; }
+  .card-check:hover { border-color:var(--done); background:var(--accent2-light); }
+  .done-card .card-check { background:var(--done); border-color:var(--done); }
+  .done-card .card-check::after { content:'✓'; font-size:12px; font-weight:700; color:white; }
+  .card-body { flex:1; min-width:0; }
+  .card-top { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:5px; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:20px; font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; white-space:nowrap; }
+  .badge-materia { background:#fef3c7; color:#92400e; }
+  .badge-tarea { background:#ede9fe; color:#5b21b6; }
+  .badge-unidad { background:var(--surface2); color:var(--text-muted); }
+  .badge-done { background:var(--accent2-light); color:var(--done); }
+  .badge-pending { background:var(--accent-light); color:var(--accent); }
+  .badge-user { background:#e0f2fe; color:#0369a1; }
+  .card-title { font-weight:600; font-size:0.97rem; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card-note { font-size:0.84rem; color:var(--text-muted); margin-top:3px; font-style:italic; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card-dates { font-size:0.8rem; color:var(--text-muted); margin-top:5px; display:flex; gap:12px; flex-wrap:wrap; }
+  .card-actions { display:flex; gap:6px; flex-shrink:0; align-items:flex-start; }
+
+  .empty-state { text-align:center; padding:50px 20px; color:var(--text-muted); }
+  .empty-state .icon { font-size:3rem; margin-bottom:10px; }
+  .empty-state p { font-size:0.88rem; }
+
+  .manage-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .manage-box { background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); padding:18px; box-shadow:var(--shadow); }
+  .manage-box h3 { font-family:'DM Serif Display',serif; font-size:1rem; margin-bottom:14px; }
+  .manage-input-row { display:flex; gap:8px; margin-bottom:12px; }
+  .manage-input-row input { flex:1; }
+  .tag-list { display:flex; flex-wrap:wrap; gap:6px; }
+  .tag-item { display:inline-flex; align-items:center; gap:5px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-size:0.8rem; }
+  .tag-remove { background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:0.9rem; line-height:1; padding:0; transition:color 0.2s; }
+  .tag-remove:hover { color:var(--accent); }
+
+  .history-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:8px; }
+  .history-header h2 { font-family:'DM Serif Display',serif; font-size:1.1rem; }
+
+  .admin-banner { background:#fef3c7; border:1px solid #fde68a; border-radius:var(--radius); padding:14px 18px; margin-bottom:18px; font-size:0.85rem; color:#92400e; font-weight:500; }
+  .users-list { display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
+  .user-card { background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; box-shadow:var(--shadow); }
+  .user-info .user-email { font-weight:600; font-size:0.9rem; }
+  .user-info .user-meta { font-size:0.78rem; color:var(--text-muted); margin-top:2px; }
+  .user-stats { display:flex; gap:10px; }
+  .user-stat { text-align:center; padding:6px 12px; border-radius:8px; }
+  .user-stat strong { display:block; font-size:1.1rem; font-weight:600; }
+  .user-stat span { font-size:0.68rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; }
+  .user-stat.pend { background:var(--accent-light); }
+  .user-stat.pend strong { color:var(--accent); }
+  .user-stat.done2 { background:var(--accent2-light); }
+  .user-stat.done2 strong { color:var(--done); }
+
+  .sync-dot { width:8px; height:8px; border-radius:50%; background:#86efac; display:inline-block; margin-right:4px; vertical-align:middle; }
+  .sync-dot.syncing { background:#fcd34d; animation:pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(100px); background:var(--text); color:white; padding:12px 20px; border-radius:20px; font-size:0.82rem; font-weight:500; z-index:9999; transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1); white-space:nowrap; box-shadow:var(--shadow-lg); }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+
+  @media(max-width:600px){
+    .form-grid{grid-template-columns:1fr}
+    .manage-grid{grid-template-columns:1fr}
+    .header-stats{gap:4px}
+    .stat-pill{padding:4px 8px;font-size:0.65rem}
+    .stat-pill strong{font-size:0.9rem}
+    header h1{font-size:1.1rem}
+    .user-badge{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <p style="font-size:0.85rem;color:var(--text-muted)">Conectando...</p>
+</div>
+
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">Mis <span>Actividades</span></div>
+    <div class="login-sub">Gestión académica · Facultad</div>
+    <div class="login-tabs">
+      <div class="login-tab active" id="ltab-login" onclick="switchLoginTab('login')">Ingresar</div>
+      <div class="login-tab" id="ltab-register" onclick="switchLoginTab('register')">Registrarse</div>
+    </div>
+    <div id="login-panel" class="login-form">
+      <div><label>Email</label><input type="email" id="l-email" placeholder="tu@email.com"></div>
+      <div><label>Contraseña</label><input type="password" id="l-pass" placeholder="••••••••"></div>
+      <div class="login-error" id="login-error"></div>
+      <button class="login-btn" onclick="doLogin()">Ingresar →</button>
+    </div>
+    <div id="register-panel" class="login-form" style="display:none">
+      <div><label>Nombre</label><input type="text" id="r-name" placeholder="Tu nombre"></div>
+      <div><label>Email</label><input type="email" id="r-email" placeholder="tu@email.com"></div>
+      <div><label>Contraseña</label><input type="password" id="r-pass" placeholder="Mínimo 6 caracteres"></div>
+      <div class="login-error" id="register-error"></div>
+      <button class="login-btn" onclick="doRegister()">Crear cuenta →</button>
+    </div>
+  </div>
+</div>
+
+<div id="app-screen">
+  <header>
+    <h1>Mis <span>Actividades</span></h1>
+    <div class="header-right">
+      <div class="header-stats">
+        <div class="stat-pill pend"><strong id="stat-pending">0</strong>Pend.</div>
+        <div class="stat-pill done"><strong id="stat-done">0</strong>Listas</div>
+      </div>
+      <div class="user-badge" onclick="doLogout()">
+        <span class="udot" id="udot"></span>
+        <span id="user-label">—</span>
+        <span style="opacity:0.5;font-size:0.7rem">salir</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="tabs" id="main-tabs">
+    <div class="tab active" data-tab="nueva">＋ Nueva</div>
+    <div class="tab" data-tab="pendientes">Pendientes</div>
+    <div class="tab" data-tab="historial">Historial</div>
+    <div class="tab" data-tab="gestionar">Listas</div>
+  </div>
+
+  <main>
+    <div class="section active" id="tab-nueva">
+      <div class="form-card">
+        <h2>Registrar actividad</h2>
+        <div class="form-grid">
+          <div><label>Materia</label><select id="f-materia"><option value="">— Elegir —</option></select></div>
+          <div><label>Unidad</label><select id="f-unidad"><option value="">— Elegir —</option></select></div>
+          <div><label>Tipo de tarea</label><select id="f-tarea"><option value="">— Elegir —</option></select></div>
+          <div><label>Estado</label><select id="f-estado"><option value="pendiente">⏳ Pendiente</option><option value="realizado">✅ Realizado</option></select></div>
+          <div><label>Fecha inicio</label><input type="date" id="f-fecha-inicio"></div>
+          <div><label>Fecha límite</label><input type="date" id="f-fecha-fin"></div>
+          <div class="full"><label>Notas</label><textarea id="f-notas" placeholder="Detalles adicionales..."></textarea></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="agregarActividad()">✓ Guardar</button>
+          <button class="btn btn-secondary" onclick="limpiarForm()">✕ Limpiar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="tab-pendientes">
+      <div class="filters">
+        <div class="filter-group"><label>Materia:</label><select id="fil-materia" onchange="renderPendientes()"><option value="">Todas</option></select></div>
+        <div class="filter-group"><label>Tarea:</label><select id="fil-tarea" onchange="renderPendientes()"><option value="">Todas</option></select></div>
+      </div>
+      <div class="activity-list" id="list-pendientes"></div>
+    </div>
+
+    <div class="section" id="tab-historial">
+      <div class="history-header">
+        <h2>Actividades realizadas</h2>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <div class="filter-group"><label>Materia:</label><select id="fil-hist-materia" onchange="renderHistorial()"><option value="">Todas</option></select></div>
+          <button class="btn btn-danger btn-sm" onclick="borrarHistorial()">🗑 Borrar historial</button>
+        </div>
+      </div>
+      <div class="activity-list" id="list-historial"></div>
+    </div>
+
+    <div class="section" id="tab-gestionar">
+      <div class="manage-grid">
+        <div class="manage-box">
+          <h3>📚 Materias</h3>
+          <div class="manage-input-row"><input type="text" id="new-materia" placeholder="Nueva materia..."><button class="btn btn-primary btn-sm" onclick="agregarItem('materias','new-materia')">+</button></div>
+          <div class="tag-list" id="tags-materias"></div>
+        </div>
+        <div class="manage-box">
+          <h3>📋 Tipos de tarea</h3>
+          <div class="manage-input-row"><input type="text" id="new-tarea" placeholder="Tipo de tarea..."><button class="btn btn-primary btn-sm" onclick="agregarItem('tareas','new-tarea')">+</button></div>
+          <div class="tag-list" id="tags-tareas"></div>
+        </div>
+        <div class="manage-box">
+          <h3>🔢 Unidades</h3>
+          <div class="manage-input-row"><input type="text" id="new-unidad" placeholder="Ej: 1.1, 2.3..."><button class="btn btn-primary btn-sm" onclick="agregarItem('unidades','new-unidad')">+</button></div>
+          <div class="tag-list" id="tags-unidades"></div>
+        </div>
+      </div>
+      <p style="font-size:0.75rem;color:var(--text-muted);margin-top:14px;">
+        <span class="sync-dot" id="sync-dot"></span> Cambios sincronizados en todos los dispositivos automáticamente.
+      </p>
+    </div>
+
+    <div class="section" id="tab-admin">
+      <div class="admin-banner">⭐ Panel de administrador — actividades de todos los usuarios</div>
+      <div class="filters">
+        <div class="filter-group"><label>Usuario:</label><select id="admin-fil-user" onchange="renderAdmin()"><option value="">Todos</option></select></div>
+        <div class="filter-group"><label>Estado:</label><select id="admin-fil-estado" onchange="renderAdmin()"><option value="">Todos</option><option value="pendiente">Pendientes</option><option value="realizado">Realizados</option></select></div>
+      </div>
+      <div class="users-list" id="admin-summary"></div>
+      <div class="activity-list" id="list-admin"></div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, query, where, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyASirufR-TWJvDgtXhLVNPgMUYbgzi0uH4",
+  authDomain: "gestor-de-actividades-c54dc.firebaseapp.com",
+  projectId: "gestor-de-actividades-c54dc",
+  storageBucket: "gestor-de-actividades-c54dc.firebasestorage.app",
+  messagingSenderId: "314631742893",
+  appId: "1:314631742893:web:1d1eca28551301c67eed24"
+};
+
+// ★ CAMBIÁ ESTE EMAIL POR EL TUYO para tener acceso admin
+const ADMIN_EMAIL = "diegojarguello@gmail.com";
+
+const app = initializeApp(FIREBASE_CONFIG);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// ── STATE ───────────────────────────────────────────────────────────────────
+let me = null, isAdmin = false;
+let listas = { materias:['Administracion','Comportamiento Organizacional','Informatica','Estadistica','Economia 2'], tareas:['Foro','Cuestionario','Trabajo Practico','Parcial','Final','Lectura','Ejercicios'], unidades:['1.1','1.2','1.3','2.1','2.2','2.3','3.1','3.2','4.1','4.2','5.1','5.2','6.1','7.1','7.5'] };
+let myActs = [], allActs = [];
+let unsubActs = null, unsubListas = null, unsubAdmin = null;
+
+// ── AUTH LISTENER ───────────────────────────────────────────────────────────
+onAuthStateChanged(auth, user => {
+  if (user) { me = user; isAdmin = user.email === ADMIN_EMAIL; initApp(); }
+  else { me = null; isAdmin = false; showScreen('login'); }
+});
+
+// ── SCREENS ─────────────────────────────────────────────────────────────────
+function showScreen(s) {
+  document.getElementById('loading-screen').style.display = s==='loading' ? 'flex' : 'none';
+  document.getElementById('login-screen').style.display   = s==='login'   ? 'flex' : 'none';
+  document.getElementById('app-screen').style.display     = s==='app'     ? 'block': 'none';
+}
+
+// ── LOGIN / REGISTER ─────────────────────────────────────────────────────────
+window.switchLoginTab = (t) => {
+  document.getElementById('ltab-login').classList.toggle('active', t==='login');
+  document.getElementById('ltab-register').classList.toggle('active', t==='register');
+  document.getElementById('login-panel').style.display    = t==='login'    ? 'flex':'none';
+  document.getElementById('register-panel').style.display = t==='register' ? 'flex':'none';
+};
+window.doLogin = async () => {
+  const err = document.getElementById('login-error');
+  err.classList.remove('show');
+  try { await signInWithEmailAndPassword(auth, document.getElementById('l-email').value.trim(), document.getElementById('l-pass').value); }
+  catch(e) { err.textContent = xlate(e.code); err.classList.add('show'); }
+};
+window.doRegister = async () => {
+  const err = document.getElementById('register-error');
+  err.classList.remove('show');
+  const name = document.getElementById('r-name').value.trim();
+  if (!name) { err.textContent='Ingresá tu nombre.'; err.classList.add('show'); return; }
+  try {
+    const c = await createUserWithEmailAndPassword(auth, document.getElementById('r-email').value.trim(), document.getElementById('r-pass').value);
+    await updateProfile(c.user, { displayName: name });
+    await setDoc(doc(db,'users',c.user.uid), { email:c.user.email, name, createdAt:serverTimestamp() });
+  } catch(e) { err.textContent=xlate(e.code); err.classList.add('show'); }
+};
+window.doLogout = async () => {
+  if (!confirm('¿Cerrar sesión?')) return;
+  [unsubActs, unsubListas, unsubAdmin].forEach(u => u && u());
+  await signOut(auth);
+};
+function xlate(c){
+  return {'auth/invalid-email':'Email inválido.','auth/user-not-found':'No existe esa cuenta.','auth/wrong-password':'Contraseña incorrecta.','auth/email-already-in-use':'Ese email ya está registrado.','auth/weak-password':'Mínimo 6 caracteres.','auth/invalid-credential':'Email o contraseña incorrectos.'}[c] || 'Error: '+c;
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+function initApp() {
+  showScreen('app');
+  const name = me.displayName || me.email.split('@')[0];
+  document.getElementById('user-label').textContent = isAdmin ? `⭐ ${name}` : name;
+  if (isAdmin) document.getElementById('udot').classList.add('admin');
+
+  // Admin tab
+  if (isAdmin && !document.querySelector('.tab-admin')) {
+    const t = document.createElement('div');
+    t.className='tab tab-admin'; t.dataset.tab='admin'; t.textContent='⭐ Admin';
+    t.addEventListener('click', ()=>switchTab('admin'));
+    document.getElementById('main-tabs').appendChild(t);
+  }
+
+  // Listas (shared)
+  unsubListas = onSnapshot(doc(db,'config','listas'), snap => {
+    if (snap.exists()) listas = snap.data();
+    refreshSelects(); refreshAllTags();
+  }, () => { refreshSelects(); refreshAllTags(); });
+
+  // My activities
+  unsubActs = onSnapshot(query(collection(db,'actividades'), where('uid','==',me.uid)), snap => {
+    myActs = snap.docs.map(d=>({fid:d.id,...d.data()})).sort((a,b)=>(b.creadoEn?.seconds||0)-(a.creadoEn?.seconds||0));
+    renderAll();
+  });
+
+  // Admin: all activities
+  if (isAdmin) {
+    unsubAdmin = onSnapshot(collection(db,'actividades'), snap => {
+      allActs = snap.docs.map(d=>({fid:d.id,...d.data()})).sort((a,b)=>(b.creadoEn?.seconds||0)-(a.creadoEn?.seconds||0));
+      renderAdmin();
+    });
+  }
+
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', ()=>switchTab(t.dataset.tab)));
+  ['new-materia','new-tarea','new-unidad'].forEach((id,i)=>{
+    const keys=['materias','tareas','unidades'];
+    const inIds=['new-materia','new-tarea','new-unidad'];
+    document.getElementById(id).addEventListener('keydown', e=>{ if(e.key==='Enter') agregarItem(keys[i],inIds[i]); });
+  });
+}
+
+// ── LISTAS ───────────────────────────────────────────────────────────────────
+async function saveListas() {
+  sync(true);
+  await setDoc(doc(db,'config','listas'), listas).catch(console.error);
+  sync(false);
+}
+window.agregarItem = async (key, inputId) => {
+  const input=document.getElementById(inputId), val=input.value.trim();
+  if (!val) return;
+  if (!listas[key]) listas[key]=[];
+  if (listas[key].includes(val)){toast('Ya existe en la lista');return;}
+  listas[key].push(val); input.value=''; toast(`"${val}" agregado ✓`);
+  await saveListas();
+};
+window.eliminarItem = async (key, val) => {
+  if (!confirm(`¿Eliminar "${val}"?`)) return;
+  listas[key]=listas[key].filter(v=>v!==val); toast(`"${val}" eliminado`);
+  await saveListas();
+};
+
+// ── ACTIVIDADES ───────────────────────────────────────────────────────────────
+window.agregarActividad = async () => {
+  const materia=g('f-materia'), tarea=g('f-tarea');
+  if (!materia||!tarea){toast('⚠ Completá materia y tarea');return;}
+  sync(true);
+  await setDoc(doc(collection(db,'actividades')), {
+    uid:me.uid, userEmail:me.email, userName:me.displayName||me.email.split('@')[0],
+    materia, unidad:g('f-unidad'), tarea, estado:g('f-estado'),
+    fechaInicio:g('f-fecha-inicio'), fechaFin:g('f-fecha-fin'), notas:g('f-notas'),
+    creadoEn:serverTimestamp()
+  }).catch(e=>toast('⚠ Error: '+e.message));
+  sync(false); limpiarForm(); toast('✓ Actividad guardada');
+  if(g('f-estado')==='pendiente') setTimeout(()=>switchTab('pendientes'),600);
+};
+window.limpiarForm = () => {
+  ['f-materia','f-unidad','f-tarea','f-fecha-inicio','f-fecha-fin'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-estado').value='pendiente';
+  document.getElementById('f-notas').value='';
+};
+window.toggleEstado = async (fid) => {
+  const act=myActs.find(a=>a.fid===fid); if(!act) return;
+  const ns=act.estado==='pendiente'?'realizado':'pendiente';
+  const upd={estado:ns}; if(ns==='realizado') upd.fechaRealizado=new Date().toISOString().split('T')[0];
+  sync(true); await updateDoc(doc(db,'actividades',fid),upd); sync(false);
+  toast(ns==='realizado'?'✅ Realizada':'⏳ Pendiente');
+};
+window.eliminarActividad = async (fid) => {
+  if(!confirm('¿Eliminar?')) return;
+  sync(true); await deleteDoc(doc(db,'actividades',fid)); sync(false); toast('Eliminada');
+};
+window.borrarHistorial = async () => {
+  const fil=document.getElementById('fil-hist-materia').value;
+  const list=myActs.filter(a=>a.estado==='realizado'&&(!fil||a.materia===fil));
+  if(!list.length){toast('No hay historial para borrar');return;}
+  if(!confirm(`¿Borrar ${list.length} actividad(es)?`)) return;
+  sync(true); await Promise.all(list.map(a=>deleteDoc(doc(db,'actividades',a.fid)))); sync(false); toast('Historial borrado ✓');
+};
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function card(act, showUser=false) {
+  const d=act.estado==='realizado', id=act.fid;
+  return `<div class="activity-card ${d?'done-card':'pending-card'}">
+    <div class="card-check" onclick="toggleEstado('${id}')"></div>
+    <div class="card-body">
+      <div class="card-top">
+        <span class="badge badge-materia">${act.materia}</span>
+        ${act.unidad?`<span class="badge badge-unidad">U${act.unidad}</span>`:''}
+        <span class="badge badge-tarea">${act.tarea}</span>
+        <span class="badge ${d?'badge-done':'badge-pending'}">${d?'✅ Realizado':'⏳ Pendiente'}</span>
+        ${showUser?`<span class="badge badge-user">👤 ${act.userName||act.userEmail}</span>`:''}
+      </div>
+      <div class="card-title">${act.materia} — ${act.tarea}${act.unidad?` (U${act.unidad})`:''}</div>
+      ${act.notas?`<div class="card-note">${act.notas}</div>`:''}
+      <div class="card-dates">
+        ${act.fechaInicio?`<span>📅 ${ff(act.fechaInicio)}</span>`:''}
+        ${act.fechaFin?`<span>⏰ ${ff(act.fechaFin)}</span>`:''}
+        ${act.fechaRealizado?`<span>✓ ${ff(act.fechaRealizado)}</span>`:''}
+      </div>
+    </div>
+    <div class="card-actions">
+      <button class="btn btn-sm ${d?'btn-secondary':'btn-success'}" onclick="toggleEstado('${id}')">${d?'↩':'✓'}</button>
+      <button class="btn btn-sm btn-danger" onclick="eliminarActividad('${id}')">🗑</button>
+    </div>
+  </div>`;
+}
+function ff(f){if(!f)return'';const[y,m,d]=f.split('-');return`${d}/${m}/${y}`;}
+function empty(icon,msg){return`<div class="empty-state"><div class="icon">${icon}</div><p>${msg}</p></div>`;}
+
+function renderPendientes(){
+  const fm=document.getElementById('fil-materia').value, ft=document.getElementById('fil-tarea').value;
+  let a=myActs.filter(x=>x.estado==='pendiente');
+  if(fm)a=a.filter(x=>x.materia===fm); if(ft)a=a.filter(x=>x.tarea===ft);
+  document.getElementById('list-pendientes').innerHTML=a.length?a.map(x=>card(x)).join(''):empty('🎉','¡Sin pendientes!');
+}
+function renderHistorial(){
+  const fm=document.getElementById('fil-hist-materia').value;
+  let a=myActs.filter(x=>x.estado==='realizado');
+  if(fm)a=a.filter(x=>x.materia===fm);
+  document.getElementById('list-historial').innerHTML=a.length?a.map(x=>card(x)).join(''):empty('📂','No hay actividades realizadas aún.');
+}
+function updateStats(){
+  document.getElementById('stat-pending').textContent=myActs.filter(a=>a.estado==='pendiente').length;
+  document.getElementById('stat-done').textContent=myActs.filter(a=>a.estado==='realizado').length;
+}
+function renderAll(){renderPendientes();renderHistorial();updateStats();}
+
+window.renderAdmin = () => {
+  const fu=document.getElementById('admin-fil-user')?.value||'';
+  const fe=document.getElementById('admin-fil-estado')?.value||'';
+  const byUser={};
+  allActs.forEach(a=>{
+    if(!byUser[a.userEmail]) byUser[a.userEmail]={name:a.userName||a.userEmail,email:a.userEmail,p:0,d:0};
+    a.estado==='pendiente'?byUser[a.userEmail].p++:byUser[a.userEmail].d++;
+  });
+  const sel=document.getElementById('admin-fil-user');
+  if(sel){const pv=sel.value; sel.innerHTML='<option value="">Todos</option>'; Object.values(byUser).forEach(u=>{const o=document.createElement('option');o.value=u.email;o.textContent=u.name;sel.appendChild(o);}); sel.value=pv;}
+  document.getElementById('admin-summary').innerHTML=Object.values(byUser).map(u=>`
+    <div class="user-card"><div class="user-info"><div class="user-email">${u.name}</div><div class="user-meta">${u.email}</div></div>
+    <div class="user-stats"><div class="user-stat pend"><strong>${u.p}</strong><span>Pend.</span></div><div class="user-stat done2"><strong>${u.d}</strong><span>Listas</span></div></div></div>`).join('')||empty('👥','Sin usuarios aún.');
+  let a=[...allActs]; if(fu)a=a.filter(x=>x.userEmail===fu); if(fe)a=a.filter(x=>x.estado===fe);
+  document.getElementById('list-admin').innerHTML=a.length?a.map(x=>card(x,true)).join(''):empty('📋','Sin actividades.');
+};
+
+// ── SELECTS / TAGS ────────────────────────────────────────────────────────────
+function populate(id,arr,ph){
+  const el=document.getElementById(id); if(!el)return;
+  const pv=el.value; el.innerHTML=`<option value="">${ph}</option>`;
+  [...(arr||[])].sort().forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;el.appendChild(o);});
+  el.value=pv;
+}
+function refreshSelects(){
+  populate('f-materia',listas.materias,'— Elegir —'); populate('f-unidad',listas.unidades,'— Elegir —'); populate('f-tarea',listas.tareas,'— Elegir —');
+  populate('fil-materia',listas.materias,'Todas'); populate('fil-tarea',listas.tareas,'Todas'); populate('fil-hist-materia',listas.materias,'Todas');
+}
+function refreshTags(key,cid){
+  const c=document.getElementById(cid); if(!c)return; c.innerHTML='';
+  [...(listas[key]||[])].sort().forEach(v=>{
+    const t=document.createElement('div'); t.className='tag-item';
+    t.innerHTML=`${v} <button class="tag-remove" onclick="eliminarItem('${key}','${v.replace(/'/g,"\\'")}')">×</button>`;
+    c.appendChild(t);
+  });
+}
+function refreshAllTags(){refreshTags('materias','tags-materias');refreshTags('tareas','tags-tareas');refreshTags('unidades','tags-unidades');}
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+window.switchTab = (name) => {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
+  document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id==='tab-'+name));
+  if(name==='gestionar')refreshAllTags();
+  if(name==='admin')renderAdmin();
+};
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function g(id){return document.getElementById(id)?.value||'';}
+function sync(on){const d=document.getElementById('sync-dot');if(d)d.classList.toggle('syncing',on);}
+let _tt;
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),2200);}
+window.toast=toast;
+</script>
+</body>
+</html>

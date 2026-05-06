@@ -383,9 +383,9 @@ textarea{resize:vertical;min-height:68px;}
   </header>
 
   <div class="tabs" id="main-tabs">
-    <div class="tab" data-tab="nueva">＋ Agregar</div>
-    <div class="tab active" data-tab="pendientes">Pendientes</div>
-    <div class="tab" data-tab="historial">Finalizadas</div>
+    <div class="tab" data-tab="nueva">＋ Agregar actividad</div>
+    <div class="tab active" data-tab="pendientes">Actividades pendientes</div>
+    <div class="tab" data-tab="historial">Actividades finalizadas</div>
     <div class="tab" data-tab="gestionar">Personalizar opciones</div>
   </div>
 
@@ -428,10 +428,7 @@ textarea{resize:vertical;min-height:68px;}
     <div class="section" id="tab-historial">
       <div class="history-header">
         <h2>Actividades finalizadas</h2>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <div class="filter-group"><label>Materia:</label><select id="fil-hist-materia" onchange="renderHistorial()"><option value="">Todas</option></select></div>
-          <button class="btn btn-danger btn-sm" onclick="borrarHistorial()">🗑 Borrar historial</button>
-        </div>
+        <button class="btn btn-danger btn-sm" onclick="borrarHistorial()">🗑 Borrar historial</button>
       </div>
       <div id="list-historial"></div>
     </div>
@@ -470,9 +467,7 @@ textarea{resize:vertical;min-height:68px;}
     <!-- ADMIN -->
     <div class="section" id="tab-admin">
       <div class="admin-banner">⭐ Panel de Administrador — acceso completo.</div>
-      <div class="filters">
-        <div class="filter-group"><label>Estado:</label><select id="admin-fil-estado" onchange="renderAdmin()"><option value="">Todos</option><option value="pendiente">Pendientes</option><option value="realizado">Finalizados</option></select></div>
-      </div>
+
       <div class="users-list" id="admin-summary"></div>
       <div id="list-admin"></div>
       <div class="admin-section-title">👥 Gestión de usuarios</div>
@@ -661,7 +656,7 @@ function initApp(){
   },()=>{refreshSelects();refreshAllTags();});
 
   // calendar is shared
-  unsubCal=onSnapshot(doc(db,'config','calendario'),snap=>{
+  unsubCal=onSnapshot(doc(db,'users_cal',me.uid),snap=>{
     if(snap.exists())calData=snap.data();
     renderCalendar();renderCalEditor();
   },()=>{renderCalendar();renderCalEditor();});
@@ -767,7 +762,7 @@ window.removeCalRow=async(dia,idx)=>{
 };
 async function saveCalendar(doToast=true){
   sync(true);
-  await setDoc(doc(db,'config','calendario'),calData).catch(console.error);
+  await setDoc(doc(db,'users_cal',me.uid),calData).catch(console.error);
   sync(false);
   if(doToast)toast('Calendario actualizado ✓');
 }
@@ -822,10 +817,9 @@ window.eliminarActividad=async(fid)=>{
   sync(true);await deleteDoc(doc(db,'actividades',fid));sync(false);toast('Eliminada');
 };
 window.borrarHistorial=async()=>{
-  const fil=document.getElementById('fil-hist-materia').value;
-  const list=myActs.filter(a=>a.estado==='realizado'&&(!fil||a.materia===fil));
+  const list=myActs.filter(a=>a.estado==='realizado');
   if(!list.length){toast('No hay historial para borrar');return;}
-  if(!confirm(`¿Borrar ${list.length} actividad(es)?`))return;
+  if(!confirm(`¿Borrar ${list.length} actividad(es) del historial?`))return;
   sync(true);await Promise.all(list.map(a=>deleteDoc(doc(db,'actividades',a.fid))));sync(false);toast('Historial borrado ✓');
 };
 
@@ -870,14 +864,11 @@ function ff(f){if(!f)return'';const[y,m,d]=f.split('-');return`${d}/${m}/${y}`;}
 function empty(icon,msg){return`<div class="empty-state"><div class="icon">${icon}</div><p>${msg}</p></div>`;}
 
 function renderPendientes(){
-  const fm=document.getElementById('fil-materia').value,ft=document.getElementById('fil-tarea').value;
   let a=myActs.filter(x=>x.estado==='pendiente');
-  if(fm)a=a.filter(x=>x.materia===fm);if(ft)a=a.filter(x=>x.tarea===ft);
   document.getElementById('list-pendientes').innerHTML=a.length?`<div class="activity-list">${a.map(x=>card(x)).join('')}</div>`:empty('🎉','¡Sin pendientes!');
 }
 function renderHistorial(){
-  const fm=document.getElementById('fil-hist-materia').value;
-  let a=myActs.filter(x=>x.estado==='realizado');if(fm)a=a.filter(x=>x.materia===fm);
+  let a=myActs.filter(x=>x.estado==='realizado');
   document.getElementById('list-historial').innerHTML=a.length?`<div class="activity-list">${a.map(x=>card(x)).join('')}</div>`:empty('📂','No hay finalizadas aún.');
 }
 function updateStats(){
@@ -887,46 +878,58 @@ function updateStats(){
 function renderAll(){renderPendientes();renderHistorial();updateStats();}
 
 // ── ADMIN ──
-window.renderAdmin=async()=>{ document.getElementById('list-admin').innerHTML='<div class="empty-state"><div class="icon">⏳</div><p>Cargando...</p></div>'; document.getElementById('admin-summary').innerHTML=''; 
-  const fu=document.getElementById('admin-fil-user')?.value||'';
-  const fe=document.getElementById('admin-fil-estado')?.value||'';
+window.renderAdmin=async()=>{
+  document.getElementById('admin-summary').innerHTML='<div class="empty-state"><div class="icon">⏳</div><p>Cargando usuarios...</p></div>';
+  document.getElementById('list-admin').innerHTML='';
+  document.getElementById('admin-users-mgmt').innerHTML='';
+
   const byUser={};
+  // First build from activities
   allActs.forEach(a=>{
-    if(!byUser[a.uid])byUser[a.uid]={name:a.userName,email:a.userEmail,uid:a.uid,p:0,d:0,joinedAt:''};
+    if(!byUser[a.uid])byUser[a.uid]={name:a.userName||'—',email:a.userEmail||'',uid:a.uid,p:0,d:0,joinedAt:'—'};
     a.estado==='pendiente'?byUser[a.uid].p++:byUser[a.uid].d++;
   });
+  // Then fetch ALL registered users from Firestore (includes those with 0 activities)
+  try{
+    const usersSnap=await getDocs(collection(db,'users'));
+    usersSnap.docs.forEach(docSnap=>{
+      const u=docSnap.data();
+      const uid=docSnap.id;
+      if(!byUser[uid])byUser[uid]={name:u.name||'—',email:u.email||'',uid,p:0,d:0};
+      byUser[uid].joinedAt=u.createdAt?.toDate?.().toLocaleString('es-AR')||'—';
+      if(u.name)byUser[uid].name=u.name;
+    });
+  }catch(e){console.error('Error fetching users:',e);}
 
-  // point 8: fetch all users from firestore to show even those with 0 activities
-  const usersSnap=await getDocs(collection(db,'users'));
-  usersSnap.docs.forEach(d=>{
-    const u=d.data();
-    if(!byUser[d.id])byUser[d.id]={name:u.name,email:u.email,uid:d.id,p:0,d:0};
-    byUser[d.id].joinedAt=u.createdAt?.toDate?.().toLocaleString('es-AR')||'—';
-  });
+  const users=Object.values(byUser);
 
-  const sel=document.getElementById('admin-fil-user');
-  if(sel){const pv=sel.value;sel.innerHTML='<option value="">Todos</option>';Object.values(byUser).forEach(u=>{const o=document.createElement('option');o.value=u.uid;o.textContent=u.name;sel.appendChild(o);});sel.value=pv;}
-
-  document.getElementById('admin-summary').innerHTML=Object.values(byUser).map(u=>`
+  // Summary cards
+  document.getElementById('admin-summary').innerHTML=users.length?users.map(u=>`
     <div class="user-card">
-      <div class="user-info"><div class="user-name">${u.name}</div><div class="user-meta">${fromEmail(u.email)} · Se unió: ${u.joinedAt||'—'}</div></div>
+      <div class="user-info">
+        <div class="user-name">${u.name}</div>
+        <div class="user-meta">${fromEmail(u.email)} · Se unió: ${u.joinedAt}</div>
+      </div>
       <div class="user-stats">
         <div class="user-stat pend"><strong>${u.p}</strong><span>Pend.</span></div>
         <div class="user-stat done2"><strong>${u.d}</strong><span>Final.</span></div>
       </div>
-    </div>`).join('')||empty('👥','Sin usuarios.');
+    </div>`).join(''):empty('👥','Sin usuarios registrados aún.');
 
-  let a=[...allActs];if(fu)a=a.filter(x=>x.uid===fu);if(fe)a=a.filter(x=>x.estado===fe);
-  document.getElementById('list-admin').innerHTML=a.length?`<div class="activity-list">${a.map(x=>card(x,true)).join('')}</div>`:empty('📋','Sin actividades.');
+  // All activities list
+  document.getElementById('list-admin').innerHTML=allActs.length?`<div class="activity-list">${allActs.map(x=>card(x,true)).join('')}</div>`:empty('📋','Sin actividades.');
 
-  // point 8: user management with delete
+  // User management panel
   const mgmt=document.getElementById('admin-users-mgmt');
-  if(mgmt)mgmt.innerHTML=Object.values(byUser).map(u=>`
+  if(mgmt)mgmt.innerHTML=users.length?users.map(u=>`
     <div class="admin-user-row">
-      <div><div style="font-weight:700;font-size:.9rem;">${u.name}</div><div style="font-size:.74rem;color:var(--text-muted);">${fromEmail(u.email)} · ${u.joinedAt||'—'}</div></div>
+      <div>
+        <div style="font-weight:700;font-size:.9rem;">${u.name}</div>
+        <div style="font-size:.74rem;color:var(--text-muted);">${fromEmail(u.email)} · Se unió: ${u.joinedAt}</div>
+      </div>
       <div class="admin-user-actions">
-        <button class="btn btn-sm btn-secondary" onclick="openAdminReset('${u.uid}','${u.name}')">🔑 PIN</button>
-        <button class="btn btn-sm btn-danger" onclick="adminDeleteUser('${u.uid}','${u.name}')">🗑 Eliminar</button>
+        <button class="btn btn-sm btn-secondary" onclick="openAdminReset('${u.uid}','${u.name.replace(/'/g,"\'")}')">🔑 Cambiar PIN</button>
+        <button class="btn btn-sm btn-danger" onclick="adminDeleteUser('${u.uid}','${u.name.replace(/'/g,"\'")}')">🗑 Eliminar</button>
       </div>
     </div>`).join('')||'<p style="font-size:.83rem;color:var(--text-muted)">No hay usuarios aún.</p>';
 };

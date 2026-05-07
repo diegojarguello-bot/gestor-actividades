@@ -229,6 +229,9 @@ textarea{resize:vertical;min-height:68px;}
 .sync-dot.syncing{background:#fbbf24;animation:pulse 1s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
+/* FLOATING HOME BUTTON */
+.fab-home{position:fixed;bottom:24px;right:20px;z-index:999;background:var(--accent);color:white;border:none;border-radius:50px;padding:11px 18px;font-family:'Inter',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(37,99,168,.4);display:flex;align-items:center;gap:7px;transition:all .2s;}
+.fab-home:hover{background:var(--accent-dark);transform:translateY(-2px);box-shadow:0 6px 20px rgba(37,99,168,.5);}
 /* TOAST */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(110px);background:var(--text);color:white;padding:11px 20px;border-radius:8px;font-size:0.83rem;font-weight:600;z-index:9999;transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:var(--shadow-lg);border-left:4px solid var(--accent);}
 .toast.show{transform:translateX(-50%) translateY(0);}
@@ -244,8 +247,8 @@ textarea{resize:vertical;min-height:68px;}
   .header-title{font-size:.88rem;}
   .stat-pill .pill-label{display:none;}
   .cal-grid{grid-template-columns:1fr;}
-  .activity-card{grid-template-columns:1fr auto;gap:10px;}
-  .card-status{display:none;}
+  .activity-card{grid-template-columns:1fr auto auto;gap:8px;}
+  .card-status{text-align:right;min-width:70px;font-size:0.72rem;}
   .user-badge .badge-name{display:none;}
   .manage-box h3{font-size:.88rem;}
 }
@@ -413,7 +416,6 @@ textarea{resize:vertical;min-height:68px;}
           <div><label>Unidad</label><select id="f-unidad"><option value="">— Elegir —</option></select></div>
           <div><label>Tipo de tarea</label><select id="f-tarea" onchange="onTareaChange()"><option value="">— Elegir —</option></select></div>
           <div id="tp-num-wrap" style="display:none"><label>Número de TP</label><select id="f-tp-num"><option value="">— Elegir —</option></select></div>
-          <div><label>Fecha inicio</label><input type="date" id="f-fecha-inicio"></div>
           <div><label>Fecha límite / entrega</label><input type="date" id="f-fecha-fin"></div>
           <div class="full"><label>Notas / detalles</label><textarea id="f-notas" placeholder="Detalles adicionales..."></textarea></div>
         </div>
@@ -469,7 +471,6 @@ textarea{resize:vertical;min-height:68px;}
       <div class="admin-banner">⭐ Panel de Administrador — acceso completo.</div>
 
       <div class="users-list" id="admin-summary"></div>
-      <div id="list-admin"></div>
       <div class="admin-section-title">👥 Gestión de usuarios</div>
       <div id="admin-users-mgmt"></div>
     </div>
@@ -477,6 +478,7 @@ textarea{resize:vertical;min-height:68px;}
   </main>
 </div>
 
+<button class="fab-home" onclick="switchTab('pendientes')" title="Ir a Actividades pendientes">🏠 Inicio</button>
 <div class="toast" id="toast"></div>
 
 <script type="module">
@@ -681,7 +683,7 @@ function initApp(){
   });
 
   // point 11: remove estado selector, default always pendiente
-  document.getElementById('f-fecha-inicio').value=new Date().toISOString().split('T')[0];
+
 }
 
 // ── LISTAS (point 10: per user) ──
@@ -793,15 +795,15 @@ window.agregarActividad=async()=>{
   await setDoc(doc(collection(db,'actividades')),{
     uid:me.uid,userEmail:me.email,userName:me.displayName||myUsername,
     materia,unidad,tarea,estado:'pendiente', // point 11: always pendiente
-    fechaInicio:g('f-fecha-inicio'),fechaFin:g('f-fecha-fin'),notas:g('f-notas'),
+    fechaInicio:'',fechaFin:g('f-fecha-fin'),notas:g('f-notas'),
     creadoEn:serverTimestamp()
   }).catch(e=>toast('⚠ Error: '+e.message));
   sync(false);limpiarForm();toast('✓ Actividad guardada');
   setTimeout(()=>switchTab('pendientes'),400);
 };
 window.limpiarForm=()=>{
-  ['f-materia','f-unidad','f-tarea','f-fecha-fin'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('f-fecha-inicio').value=new Date().toISOString().split('T')[0];
+  ['f-materia','f-unidad','f-tarea','f-fecha-fin'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+
   document.getElementById('f-notas').value='';
   document.getElementById('tp-num-wrap').style.display='none';
 };
@@ -845,7 +847,7 @@ function card(act,showUser=false){
         ${act.tarea}${act.unidad?` <span class="card-unit">(U${act.unidad})</span>`:''}
       </div>
       <div class="card-meta-row">
-        ${act.fechaInicio?`<span class="card-meta-item">Inicia <strong>${ff(act.fechaInicio)}</strong></span>`:''}
+
         ${act.fechaFin?`<span class="card-meta-item">Finaliza <strong>${ff(act.fechaFin)}</strong></span>`:''}
         ${act.fechaRealizado?`<span class="card-meta-item">✓ ${ff(act.fechaRealizado)}</span>`:''}
         ${showUser?`<span class="chip-user">👤 ${act.userName}</span>`:''}

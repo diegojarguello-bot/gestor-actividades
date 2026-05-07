@@ -879,60 +879,64 @@ function renderAll(){renderPendientes();renderHistorial();updateStats();}
 
 // ── ADMIN ──
 window.renderAdmin=async()=>{
-  document.getElementById('admin-summary').innerHTML='<div class="empty-state"><div class="icon">⏳</div><p>Cargando usuarios...</p></div>';
+  document.getElementById('admin-summary').innerHTML=empty('⏳','Cargando...');
   document.getElementById('list-admin').innerHTML='';
   document.getElementById('admin-users-mgmt').innerHTML='';
 
   const byUser={};
-  // First build from activities
   allActs.forEach(a=>{
     if(!byUser[a.uid])byUser[a.uid]={name:a.userName||'—',email:a.userEmail||'',uid:a.uid,p:0,d:0,joinedAt:'—'};
     a.estado==='pendiente'?byUser[a.uid].p++:byUser[a.uid].d++;
   });
-  // Then fetch ALL registered users from Firestore (includes those with 0 activities)
   try{
     const usersSnap=await getDocs(collection(db,'users'));
-    usersSnap.docs.forEach(docSnap=>{
-      const u=docSnap.data();
-      const uid=docSnap.id;
-      if(!byUser[uid])byUser[uid]={name:u.name||'—',email:u.email||'',uid,p:0,d:0};
-      byUser[uid].joinedAt=u.createdAt?.toDate?.().toLocaleString('es-AR')||'—';
+    usersSnap.docs.forEach(ds=>{
+      const u=ds.data(),uid=ds.id;
+      if(!byUser[uid])byUser[uid]={name:u.name||'—',email:u.email||'',uid,p:0,d:0,joinedAt:'—'};
       if(u.name)byUser[uid].name=u.name;
+      byUser[uid].joinedAt=u.createdAt?.toDate?.().toLocaleString('es-AR')||'—';
     });
-  }catch(e){console.error('Error fetching users:',e);}
+  }catch(e){console.error('Admin fetch users error:',e);}
 
   const users=Object.values(byUser);
 
-  // Summary cards
-  document.getElementById('admin-summary').innerHTML=users.length?users.map(u=>`
-    <div class="user-card">
-      <div class="user-info">
-        <div class="user-name">${u.name}</div>
-        <div class="user-meta">${fromEmail(u.email)} · Se unió: ${u.joinedAt}</div>
-      </div>
-      <div class="user-stats">
-        <div class="user-stat pend"><strong>${u.p}</strong><span>Pend.</span></div>
-        <div class="user-stat done2"><strong>${u.d}</strong><span>Final.</span></div>
-      </div>
-    </div>`).join(''):empty('👥','Sin usuarios registrados aún.');
+  // Summary
+  const summaryHTML=users.map(u=>{
+    return '<div class="user-card">'
+      +'<div class="user-info">'
+      +'<div class="user-name">'+u.name+'</div>'
+      +'<div class="user-meta">'+fromEmail(u.email)+' · Se unió: '+u.joinedAt+'</div>'
+      +'</div>'
+      +'<div class="user-stats">'
+      +'<div class="user-stat pend"><strong>'+u.p+'</strong><span>Pend.</span></div>'
+      +'<div class="user-stat done2"><strong>'+u.d+'</strong><span>Final.</span></div>'
+      +'</div></div>';
+  }).join('');
+  document.getElementById('admin-summary').innerHTML=summaryHTML||empty('👥','Sin usuarios registrados aún.');
 
-  // All activities list
-  document.getElementById('list-admin').innerHTML=allActs.length?`<div class="activity-list">${allActs.map(x=>card(x,true)).join('')}</div>`:empty('📋','Sin actividades.');
+  // Activities
+  document.getElementById('list-admin').innerHTML=allActs.length
+    ?'<div class="activity-list">'+allActs.map(x=>card(x,true)).join('')+'</div>'
+    :empty('📋','Sin actividades.');
 
-  // User management panel
+  // User management
   const mgmt=document.getElementById('admin-users-mgmt');
-  if(mgmt)mgmt.innerHTML=users.length?users.map(u=>`
-    <div class="admin-user-row">
-      <div>
-        <div style="font-weight:700;font-size:.9rem;">${u.name}</div>
-        <div style="font-size:.74rem;color:var(--text-muted);">${fromEmail(u.email)} · Se unió: ${u.joinedAt}</div>
-      </div>
-      <div class="admin-user-actions">
-        <button class="btn btn-sm btn-secondary" onclick="openAdminReset('${u.uid}','${u.name.replace(/'/g,"\'")}')">🔑 Cambiar PIN</button>
-        <button class="btn btn-sm btn-danger" onclick="adminDeleteUser('${u.uid}','${u.name.replace(/'/g,"\'")}')">🗑 Eliminar</button>
-      </div>
-    </div>`).join('')||'<p style="font-size:.83rem;color:var(--text-muted)">No hay usuarios aún.</p>';
+  if(!mgmt)return;
+  const mgmtHTML=users.map(u=>{
+    const uid=u.uid, name=u.name.replace(/"/g,'&quot;');
+    return '<div class="admin-user-row">'
+      +'<div>'
+      +'<div style="font-weight:700;font-size:.9rem;">'+u.name+'</div>'
+      +'<div style="font-size:.74rem;color:var(--text-muted);">'+fromEmail(u.email)+' · Se unió: '+u.joinedAt+'</div>'
+      +'</div>'
+      +'<div class="admin-user-actions">'
+      +'<button class="btn btn-sm btn-secondary" onclick="openAdminReset(\''+uid+'\',\''+name+'\')">🔑 Cambiar PIN</button>'
+      +'<button class="btn btn-sm btn-danger" onclick="adminDeleteUser(\''+uid+'\',\''+name+'\')">🗑 Eliminar</button>'
+      +'</div></div>';
+  }).join('');
+  mgmt.innerHTML=mgmtHTML||'<p style="font-size:.83rem;color:var(--text-muted)">No hay usuarios aún.</p>';
 };
+
 
 // ── SELECTS / TAGS ──
 function populate(id,arr,ph){

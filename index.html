@@ -96,7 +96,7 @@ header{background:var(--text);color:white;padding:4px 20px;height:72px;position:
 .dropdown-divider{height:1px;background:var(--border);margin:4px 0;}
 
 /* TABS */
-.tabs{display:flex;background:var(--surface);border-bottom:2px solid var(--border);padding:0 16px;overflow-x:auto;box-shadow:var(--shadow-sm);}
+.tabs{display:flex;background:var(--surface);border-bottom:2px solid var(--border);padding:0 16px;overflow-x:auto;box-shadow:var(--shadow-sm);position:sticky;top:72px;z-index:90;}
 .tab{padding:13px 18px;font-size:0.84rem;font-weight:600;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;white-space:nowrap;}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
 .tab:hover:not(.active){color:var(--text);}
@@ -229,9 +229,7 @@ textarea{resize:vertical;min-height:68px;}
 .sync-dot.syncing{background:#fbbf24;animation:pulse 1s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
-/* FLOATING HOME BUTTON */
-.fab-home{position:fixed;bottom:24px;right:20px;z-index:999;background:var(--accent);color:white;border:none;border-radius:50px;padding:11px 18px;font-family:'Inter',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(37,99,168,.4);display:flex;align-items:center;gap:7px;transition:all .2s;}
-.fab-home:hover{background:var(--accent-dark);transform:translateY(-2px);box-shadow:0 6px 20px rgba(37,99,168,.5);}
+
 /* TOAST */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(110px);background:var(--text);color:white;padding:11px 20px;border-radius:8px;font-size:0.83rem;font-weight:600;z-index:9999;transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:var(--shadow-lg);border-left:4px solid var(--accent);}
 .toast.show{transform:translateX(-50%) translateY(0);}
@@ -389,7 +387,6 @@ textarea{resize:vertical;min-height:68px;}
     <div class="tab" data-tab="nueva">＋ Agregar actividad</div>
     <div class="tab active" data-tab="pendientes">Actividades pendientes</div>
     <div class="tab" data-tab="historial">Actividades finalizadas</div>
-    <div class="tab" data-tab="gestionar">Personalizar opciones</div>
   </div>
 
   <main>
@@ -423,6 +420,29 @@ textarea{resize:vertical;min-height:68px;}
           <button class="btn btn-primary" onclick="agregarActividad()">✓ Guardar actividad</button>
           <button class="btn btn-secondary" onclick="limpiarForm()">✕ Limpiar</button>
         </div>
+      </div>
+
+      <!-- EDITAR OPCIONES -->
+      <div style="margin-top:8px;">
+        <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+          <span style="display:inline-block;width:3px;height:16px;background:var(--accent);border-radius:2px;"></span>
+          Editar opciones
+        </div>
+        <div class="manage-grid">
+          <div class="manage-box">
+            <h3>📚 Materias</h3>
+            <div class="manage-input-row"><input type="text" id="new-materia" placeholder="Nueva materia..."><button class="btn btn-primary btn-sm" onclick="agregarItem('materias','new-materia')">+</button></div>
+            <div class="tag-list" id="tags-materias"></div>
+          </div>
+          <div class="manage-box">
+            <h3>📋 Tipos de tarea</h3>
+            <div class="manage-input-row"><input type="text" id="new-tarea" placeholder="Tipo de tarea..."><button class="btn btn-primary btn-sm" onclick="agregarItem('tareas','new-tarea')">+</button></div>
+            <div class="tag-list" id="tags-tareas"></div>
+          </div>
+        </div>
+        <p style="font-size:.74rem;color:var(--text-muted);margin-top:12px;">
+          <span class="sync-dot" id="sync-dot"></span> Cambios sincronizados en todos los dispositivos.
+        </p>
       </div>
     </div>
 
@@ -469,7 +489,6 @@ textarea{resize:vertical;min-height:68px;}
   </main>
 </div>
 
-<button class="fab-home" onclick="switchTab('pendientes')" title="Ir a Actividades pendientes">🏠 Inicio</button>
 <div class="toast" id="toast"></div>
 
 <script type="module">
@@ -633,7 +652,6 @@ function initApp(){
   const name=me.displayName||myUsername;
   document.getElementById('user-label').textContent=isAdmin?`⭐ ${name}`:name;
   document.getElementById('greeting-name').textContent=name;
-  document.getElementById('greeting-name2').textContent=name;
   document.getElementById('greeting-date').textContent=new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
   if(isAdmin){document.getElementById('udot').classList.add('admin');document.getElementById('change-pass-item').textContent='🔑 Cambiar contraseña';}
 
@@ -713,9 +731,12 @@ function renderCalendar(){
       html+='<input placeholder="Materia" value="'+mat+'" ';
       html+='onchange="calSave(\''+d+'\','+si+',\'materia\',this.value)" ';
       html+='style="width:100%;font-size:.68rem;padding:2px 4px;border:1px solid var(--border);border-radius:3px;background:var(--surface);margin-bottom:1px;">';
+      html+='<div style="display:flex;gap:3px;align-items:center;">';
       html+='<input placeholder="Horario" value="'+hor+'" ';
       html+='onchange="calSave(\''+d+'\','+si+',\'horario\',this.value)" ';
-      html+='style="width:100%;font-size:.65rem;padding:2px 4px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text-muted);">';
+      html+='style="flex:1;font-size:.65rem;padding:2px 4px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text-muted);">';
+      html+='<span onclick="calRemove(\''+d+'\','+si+')" style="cursor:pointer;color:#dc2626;font-size:.85rem;padding:0 3px;flex-shrink:0;" title="Eliminar">✕</span>';
+      html+='</div>';
       html+='</div>';
     });
     html+='</div>';
@@ -738,6 +759,15 @@ window.calAddSlot=function(dia){
   if(!calData[dia])calData[dia]=[];
   calData[dia].push({materia:'',horario:''});
   renderCalendar();
+};
+window.calRemove=function(dia,idx){
+  if(!calData[dia])return;
+  calData[dia].splice(idx,1);
+  renderCalendar();
+  clearTimeout(_calTimer);
+  _calTimer=setTimeout(function(){
+    setDoc(doc(db,'users_cal',me.uid),calData).catch(console.error);
+  },500);
 };
 
 
@@ -964,7 +994,7 @@ function refreshAllTags(){refreshTags('materias','tags-materias');refreshTags('t
 window.switchTab=name=>{
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
   document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id==='tab-'+name));
-  if(name==='gestionar'){refreshAllTags();}
+  if(name==='nueva'){refreshAllTags();}
   if(name==='admin')renderAdmin();
 };
 

@@ -163,8 +163,8 @@ textarea{resize:vertical;min-height:68px;}
 .activity-card:hover{box-shadow:var(--shadow);transform:translateY(-1px);}
 .activity-card.done-card{background:#fafdfb;opacity:.88;}
 .activity-card.done-card:hover{opacity:1;}
-.activity-card.urgent{border-top:2px solid #dc2626;}
-.activity-card.soon{border-top:2px solid #d97706;}
+.activity-card.urgent{}
+.activity-card.soon{}
 .card-title-text{font-family:'Inter',sans-serif;font-size:0.92rem;font-weight:600;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .card-unit{font-size:0.78rem;color:var(--text-muted);font-style:italic;margin-left:4px;}
 .card-meta-row{font-size:0.78rem;color:var(--text-muted);display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
@@ -881,62 +881,35 @@ function renderAll(){renderPendientes();renderHistorial();updateStats();}
 
 // ── ADMIN ──
 window.renderAdmin=async()=>{
-  document.getElementById('admin-summary').innerHTML=empty('⏳','Cargando...');
-  document.getElementById('list-admin').innerHTML='';
-  document.getElementById('admin-users-mgmt').innerHTML='';
-
-  const byUser={};
-  allActs.forEach(a=>{
-    if(!byUser[a.uid])byUser[a.uid]={name:a.userName||'—',email:a.userEmail||'',uid:a.uid,p:0,d:0,joinedAt:'—'};
-    a.estado==='pendiente'?byUser[a.uid].p++:byUser[a.uid].d++;
-  });
-  try{
-    const usersSnap=await getDocs(collection(db,'users'));
-    usersSnap.docs.forEach(ds=>{
-      const u=ds.data(),uid=ds.id;
-      if(!byUser[uid])byUser[uid]={name:u.name||'—',email:u.email||'',uid,p:0,d:0,joinedAt:'—'};
-      if(u.name)byUser[uid].name=u.name;
-      byUser[uid].joinedAt=u.createdAt?.toDate?.().toLocaleString('es-AR')||'—';
-    });
-  }catch(e){console.error('Admin fetch users error:',e);}
-
-  const users=Object.values(byUser);
-
-  // Summary
-  const summaryHTML=users.map(u=>{
-    return '<div class="user-card">'
-      +'<div class="user-info">'
-      +'<div class="user-name">'+u.name+'</div>'
-      +'<div class="user-meta">'+fromEmail(u.email)+' · Se unió: '+u.joinedAt+'</div>'
-      +'</div>'
-      +'<div class="user-stats">'
-      +'<div class="user-stat pend"><strong>'+u.p+'</strong><span>Pend.</span></div>'
-      +'<div class="user-stat done2"><strong>'+u.d+'</strong><span>Final.</span></div>'
-      +'</div></div>';
-  }).join('');
-  document.getElementById('admin-summary').innerHTML=summaryHTML||empty('👥','Sin usuarios registrados aún.');
-
-  // Activities
-  document.getElementById('list-admin').innerHTML=allActs.length
-    ?'<div class="activity-list">'+allActs.map(x=>card(x,true)).join('')+'</div>'
-    :empty('📋','Sin actividades.');
-
-  // User management
   const mgmt=document.getElementById('admin-users-mgmt');
   if(!mgmt)return;
-  const mgmtHTML=users.map(u=>{
-    const uid=u.uid, name=u.name.replace(/"/g,'&quot;');
-    return '<div class="admin-user-row">'
-      +'<div>'
-      +'<div style="font-weight:700;font-size:.9rem;">'+u.name+'</div>'
-      +'<div style="font-size:.74rem;color:var(--text-muted);">'+fromEmail(u.email)+' · Se unió: '+u.joinedAt+'</div>'
-      +'</div>'
-      +'<div class="admin-user-actions">'
-      +'<button class="btn btn-sm btn-secondary" onclick="openAdminReset(\''+uid+'\',\''+name+'\')">🔑 Cambiar PIN</button>'
-      +'<button class="btn btn-sm btn-danger" onclick="adminDeleteUser(\''+uid+'\',\''+name+'\')">🗑 Eliminar</button>'
-      +'</div></div>';
-  }).join('');
-  mgmt.innerHTML=mgmtHTML||'<p style="font-size:.83rem;color:var(--text-muted)">No hay usuarios aún.</p>';
+  mgmt.innerHTML=empty('⏳','Cargando usuarios...');
+  try{
+    const snap=await getDocs(collection(db,'users'));
+    if(snap.empty){mgmt.innerHTML=empty('👥','Sin usuarios registrados aún.');return;}
+    let rows='';
+    snap.docs.forEach(ds=>{
+      const u=ds.data(), uid=ds.id;
+      const name=(u.name||'—');
+      const safeName=name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      const joined=u.createdAt?.toDate?.().toLocaleString('es-AR')||'—';
+      const username=fromEmail(u.email||'');
+      rows+='<div class="admin-user-row">'
+        +'<div style="flex:1;min-width:0;">'
+        +'<div style="font-weight:700;font-size:.92rem;">'+name+'</div>'
+        +'<div style="font-size:.75rem;color:var(--text-muted);">@'+username+' &nbsp;·&nbsp; Se unió: '+joined+'</div>'
+        +'</div>'
+        +'<div class="admin-user-actions">'
+        +'<button class="btn btn-sm btn-secondary" onclick="openAdminReset(\''+uid+'\',\''+safeName+'\')">🔑 PIN</button>'
+        +'<button class="btn btn-sm btn-danger" onclick="adminDeleteUser(\''+uid+'\',\''+safeName+'\')">🗑 Eliminar</button>'
+        +'</div>'
+        +'</div>';
+    });
+    mgmt.innerHTML=rows;
+  }catch(e){
+    console.error('renderAdmin error:',e);
+    mgmt.innerHTML=empty('⚠️','Error: '+e.message);
+  }
 };
 
 

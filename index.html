@@ -269,6 +269,15 @@ textarea{resize:vertical;min-height:68px;}
 
 /* RESPONSIVE (point 17) */
 @media(max-width:640px){
+  /* Calendar as table on mobile */
+  .cal-grid{display:block !important;}
+  .cal-day{display:none !important;}
+  .cal-table{width:100%;border-collapse:collapse;font-size:0.78rem;}
+  .cal-table td{padding:5px 7px;border:1px solid var(--border);vertical-align:top;}
+  .cal-table .cal-td-day{font-weight:700;white-space:nowrap;color:var(--text-muted);font-size:0.72rem;text-transform:uppercase;width:28px;background:var(--surface2);}
+  .cal-table .cal-td-day.today-row{color:var(--accent);background:var(--accent-light);}
+  .cal-table .cal-td-info{color:var(--text);line-height:1.5;}
+  .cal-table-wrap{display:none;}
   .form-grid{grid-template-columns:1fr;}
   .manage-grid{grid-template-columns:1fr;}
   header{padding:0 12px;height:54px;}
@@ -444,6 +453,7 @@ textarea{resize:vertical;min-height:68px;}
           <button class="cal-edit-btn" id="cal-edit-btn" onclick="toggleCalEdit()">✏ Editar</button>
         </div>
         <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-table-wrap" id="cal-table-wrap"></div>
       </div>
 
       <div id="list-pendientes"></div>
@@ -799,6 +809,25 @@ function renderCalendar(){
   grid.innerHTML=h;
   const btn=document.getElementById('cal-edit-btn');
   if(btn){btn.textContent=calEditMode?'✓ Listo':'✏ Editar';btn.classList.toggle('active',calEditMode);}
+  // Render mobile table view
+  const tbl=document.getElementById('cal-table-wrap');
+  if(tbl&&!calEditMode){
+    const DIAS_SHORT=['Lu','Ma','Mi','Ju','Vi'];
+    let t='<table class="cal-table"><tbody>';
+    DIAS.forEach(function(d,i){
+      const isToday=DIAS_JS[i]===todayDowJS;
+      const slots=(calData[d]&&calData[d].length)?calData[d]:[];
+      const info=slots.length?slots.map(function(s){return(s.materia||'')+(s.horario?' '+s.horario:'');}).join(' · '):'';
+      t+='<tr>';
+      t+='<td class="cal-td-day'+(isToday?' today-row':'')+'>'+DIAS_SHORT[i]+'</td>';
+      t+='<td class="cal-td-info">'+info+'</td>';
+      t+='</tr>';
+    });
+    t+='</tbody></table>';
+    tbl.innerHTML=t;
+  } else if(tbl&&calEditMode){
+    tbl.innerHTML='';
+  }
 }
 
 window.toggleCalEdit=function(){

@@ -67,10 +67,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 #app-screen{display:none;position:relative;z-index:10;}
 
 /* HEADER */
-header{background:var(--text);color:white;padding:0 20px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.25);display:block;}
+header{background:var(--text);color:white;padding:0 20px;position:sticky;top:0;z-index:100;box-shadow:none;display:block;height:52px;}
 .header-left{display:flex;align-items:center;gap:10px;min-width:0;}
-.header-top-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;min-height:52px;flex-wrap:nowrap;}
-.header-tabs{display:flex;overflow-x:auto;border-top:1px solid rgba(255,255,255,.1);padding:0;gap:0;scrollbar-width:none;}
+.header-top-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 0;height:52px;flex-wrap:nowrap;}
+.header-tabs{display:flex;overflow-x:auto;background:var(--text);border-top:1px solid rgba(255,255,255,.12);padding:0;gap:0;scrollbar-width:none;position:sticky;top:52px;z-index:89;box-shadow:0 2px 8px rgba(0,0,0,.2);}
 .header-tabs::-webkit-scrollbar{display:none;}
 .header-tab{padding:9px 16px;font-size:0.82rem;font-weight:600;color:rgba(255,255,255,.55);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;flex-shrink:0;}
 .header-tab.active{color:white;border-bottom-color:#7eb8f0;}
@@ -417,12 +417,12 @@ textarea{resize:vertical;min-height:68px;}
         </div>
       </div>
     </div>
-    <div class="header-tabs" id="main-tabs">
-      <div class="header-tab active" data-tab="pendientes">Actividades pendientes</div>
-      <div class="header-tab" data-tab="nueva">＋ Agregar actividad</div>
-      <div class="header-tab" data-tab="historial">Actividades finalizadas</div>
-    </div>
   </header>
+  <div class="header-tabs" id="main-tabs">
+    <div class="header-tab active" data-tab="pendientes">Actividades pendientes</div>
+    <div class="header-tab" data-tab="nueva">＋ Agregar actividad</div>
+    <div class="header-tab" data-tab="historial">Actividades finalizadas</div>
+  </div>
 
   <div class="tabs" id="main-tabs">
     <div class="tab" data-tab="nueva">＋ Agregar actividad</div>

@@ -816,6 +816,17 @@ function renderCalendar(){
   }
 }
 
+window.toggleCalEdit=function(){
+  if(calEditMode){
+    Object.keys(calData).forEach(function(d){
+      calData[d]=(calData[d]||[]).filter(function(s){return s.materia||s.horario;});
+    });
+    setDoc(doc(db,'users_cal',me.uid),calData).catch(console.error);
+    toast('Calendario guardado ✓');
+  }
+  calEditMode=!calEditMode;
+  renderCalendar();
+};
 window.calSave=function(dia,idx,val){
   if(!calData[dia])calData[dia]=[];
   if(!calData[dia][idx])calData[dia][idx]={materia:'',horario:''};

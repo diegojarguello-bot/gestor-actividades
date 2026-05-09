@@ -121,17 +121,29 @@ main{padding:18px 16px 90px;max-width:920px;margin:0 auto;}
 .greeting .today-date{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:0.78rem;color:var(--text-muted);}
 
 /* CALENDAR */
-.cal-toggle-btn{display:none;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:10px 14px;font-family:'Inter',sans-serif;font-size:0.85rem;font-weight:600;color:var(--text);cursor:pointer;text-align:left;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
-.cal-toggle-btn .arrow{transition:transform .25s;font-size:.8rem;color:var(--text-muted);}
-.cal-toggle-btn.open .arrow{transform:rotate(180deg);}
-.cal-body{display:block;}
-@media(max-width:640px){
-  .cal-toggle-btn{display:flex;}
-  .cal-body{display:none;}
-  .cal-body.open{display:block;}
-  .cal-grid{grid-template-columns:1fr !important;gap:6px;}
-  .cal-day{min-height:auto !important;}
-}
+.cal-wrap{background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);padding:10px 12px;margin-bottom:14px;box-shadow:var(--shadow-sm);}
+.cal-header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.cal-title{font-family:'Playfair Display',serif;font-size:0.82rem;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px;}
+.cal-title::before{content:'';width:3px;height:14px;background:var(--accent);border-radius:2px;display:inline-block;}
+.cal-edit-btn{background:var(--accent-light);color:var(--accent);border:1px solid var(--accent);border-radius:6px;padding:4px 10px;font-size:0.74rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;}
+.cal-edit-btn:hover{background:var(--accent);color:white;}
+.cal-edit-btn.active{background:var(--accent);color:white;}
+.cal-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;}
+.cal-day{border-radius:7px;border:1px solid var(--border);padding:6px 5px;background:var(--bg);overflow:hidden;}
+.cal-day.today{background:var(--accent-light);border-color:var(--accent);}
+.cal-day-name{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:4px;white-space:nowrap;}
+.cal-day.today .cal-day-name{color:var(--accent);}
+/* VIEW MODE */
+.cal-slot-view{font-size:0.68rem;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
+.cal-day.today .cal-slot-view{border-color:var(--accent);background:rgba(37,99,168,.05);}
+.cal-empty-view{font-size:0.65rem;color:var(--text-light);font-style:italic;}
+/* EDIT MODE */
+.cal-edit-area{display:flex;flex-direction:column;gap:3px;}
+.cal-slot-edit-row{display:flex;align-items:center;gap:2px;}
+.cal-slot-input{width:100%;font-size:0.65rem;padding:2px 3px;border:1px solid var(--border);border-radius:3px;background:var(--surface);font-family:'Inter',sans-serif;color:var(--text);min-width:0;}
+.cal-slot-input:focus{outline:none;border-color:var(--accent);}
+.cal-slot-remove{background:none;border:none;cursor:pointer;color:#dc2626;font-size:.75rem;padding:0;flex-shrink:0;line-height:1;}
+.cal-add-btn{font-size:.65rem;color:var(--accent);background:none;border:none;cursor:pointer;padding:1px 0;font-family:'Inter',sans-serif;text-align:left;margin-top:1px;}
 /* CALENDAR (point 1-6) */
 .cal-wrap{background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);padding:10px 12px;margin-bottom:14px;box-shadow:var(--shadow-sm);}
 .cal-title{font-family:'Playfair Display',serif;font-size:0.82rem;font-weight:600;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
@@ -426,14 +438,11 @@ textarea{resize:vertical;min-height:68px;}
 
       <!-- CALENDAR -->
       <div class="cal-wrap">
-        <button class="cal-toggle-btn" id="cal-toggle-btn" onclick="toggleCal()">
-          <span>📅 Calendario académico semanal</span>
-          <span class="arrow">▼</span>
-        </button>
-        <div class="cal-title" id="cal-title-desktop">Calendario académico semanal</div>
-        <div class="cal-body" id="cal-body">
-          <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-header-row">
+          <div class="cal-title">Calendario semanal</div>
+          <button class="cal-edit-btn" id="cal-edit-btn" onclick="toggleCalEdit()">✏ Editar</button>
         </div>
+        <div class="cal-grid" id="cal-grid"></div>
       </div>
 
       <div id="list-pendientes"></div>
@@ -748,123 +757,81 @@ const DIAS=['Lunes','Martes','Miercoles','Jueves','Viernes'];
 const DIAS_JS=[1,2,3,4,5]; // Mon=1 ... Fri=5
 const todayDowJS=new Date().getDay(); // 0=Sun
 
+let calEditMode=false;
+let _calTimer=null;
+
 function renderCalendar(){
   const grid=document.getElementById('cal-grid');
   if(!grid)return;
-  let html='';
-  DIAS.forEach((d,i)=>{
+  let h='';
+  DIAS.forEach(function(d,i){
     const isToday=DIAS_JS[i]===todayDowJS;
-    const slots=(calData[d]&&calData[d].length)?calData[d]:[{materia:'',horario:''}];
-    html+='<div class="cal-day '+(isToday?'today':'')+'">';
-    html+='<div class="cal-day-name" style="display:flex;justify-content:space-between;align-items:center;">'+d;
-    html+='<span onclick="calAddSlot(\''+d+'\')" style="cursor:pointer;font-size:.9rem;color:var(--accent);padding:0 2px;" title="Agregar">+</span>';
-    html+='</div>';
-    slots.forEach((s,si)=>{
-      const mat=(s.materia||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-      const hor=(s.horario||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-      html+='<div style="margin-bottom:3px;">';
-      html+='<input placeholder="Materia" value="'+mat+'" ';
-      html+='onchange="calSave(\''+d+'\','+si+',\'materia\',this.value)" ';
-      html+='style="width:100%;font-size:.68rem;padding:2px 4px;border:1px solid var(--border);border-radius:3px;background:var(--surface);margin-bottom:1px;">';
-      html+='<div style="display:flex;gap:3px;align-items:center;">';
-      html+='<input placeholder="Horario" value="'+hor+'" ';
-      html+='onchange="calSave(\''+d+'\','+si+',\'horario\',this.value)" ';
-      html+='style="flex:1;font-size:.65rem;padding:2px 4px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text-muted);">';
-      html+='<span onclick="calRemove(\''+d+'\','+si+')" style="cursor:pointer;color:#dc2626;font-size:.85rem;padding:0 3px;flex-shrink:0;" title="Eliminar">✕</span>';
-      html+='</div>';
-      html+='</div>';
-    });
-    html+='</div>';
+    const slots=(calData[d]&&calData[d].length)?calData[d]:[];
+    h+='<div class="cal-day '+(isToday?'today':'')+'">';
+    h+='<div class="cal-day-name">'+d+'</div>';
+    if(calEditMode){
+      h+='<div class="cal-edit-area">';
+      if(slots.length){
+        slots.forEach(function(s,si){
+          const combined=((s.materia||'')+(s.horario?' - '+s.horario:'')).replace(/"/g,'&quot;');
+          h+='<div class="cal-slot-edit-row">';
+          h+='<input class="cal-slot-input" value="'+combined+'" placeholder="Materia - Horario" ';
+          h+='onchange="calSave(\''+d+'\','+si+',this.value)">';
+          h+='<button class="cal-slot-remove" onclick="calRemove(\''+d+'\','+si+')">✕</button>';
+          h+='</div>';
+        });
+      }
+      h+='<button class="cal-add-btn" onclick="calAdd(\''+d+'\')">+ agregar</button>';
+      h+='</div>';
+    } else {
+      if(slots.length){
+        slots.forEach(function(s){
+          const label=(s.materia||'')+(s.horario?' - '+s.horario:'');
+          h+='<span class="cal-slot-view" title="'+label+'">'+label+'</span>';
+        });
+      } else {
+        h+='<span class="cal-empty-view">—</span>';
+      }
+    }
+    h+='</div>';
   });
-  grid.innerHTML=html;
+  grid.innerHTML=h;
+  const btn=document.getElementById('cal-edit-btn');
+  if(btn){btn.textContent=calEditMode?'✓ Listo':'✏ Editar';btn.classList.toggle('active',calEditMode);}
 }
 
-window.toggleCal=function(){
-  const btn=document.getElementById('cal-toggle-btn');
-  const body=document.getElementById('cal-body');
-  if(!btn||!body)return;
-  btn.classList.toggle('open');
-  body.classList.toggle('open');
+window.toggleCalEdit=function(){
+  if(calEditMode){
+    Object.keys(calData).forEach(function(d){
+      calData[d]=(calData[d]||[]).filter(function(s){return s.materia||s.horario;});
+    });
+    setDoc(doc(db,'users_cal',me.uid),calData).catch(console.error);
+    toast('Calendario guardado ✓');
+  }
+  calEditMode=!calEditMode;
+  renderCalendar();
 };
-let _calTimer=null;
-window.calSave=function(dia,idx,field,val){
+
+window.calSave=function(dia,idx,val){
   if(!calData[dia])calData[dia]=[];
   if(!calData[dia][idx])calData[dia][idx]={materia:'',horario:''};
-  calData[dia][idx][field]=val;
-  clearTimeout(_calTimer);
-  _calTimer=setTimeout(function(){
-    Object.keys(calData).forEach(function(d){calData[d]=(calData[d]||[]).filter(function(s){return s.materia||s.horario;});});
-    setDoc(doc(db,'users_cal',me.uid),calData).catch(console.error);
-  },800);
+  const parts=val.split(' - ');
+  calData[dia][idx].materia=parts[0].trim();
+  calData[dia][idx].horario=parts.length>1?parts.slice(1).join(' - ').trim():'';
 };
-window.calAddSlot=function(dia){
+
+window.calAdd=function(dia){
   if(!calData[dia])calData[dia]=[];
   calData[dia].push({materia:'',horario:''});
   renderCalendar();
 };
+
 window.calRemove=function(dia,idx){
   if(!calData[dia])return;
   calData[dia].splice(idx,1);
   renderCalendar();
-  clearTimeout(_calTimer);
-  _calTimer=setTimeout(function(){
-    setDoc(doc(db,'users_cal',me.uid),calData).catch(console.error);
-  },500);
 };
 
-
-function renderCalEditor(){
-  const el=document.getElementById('cal-editor');
-  el.innerHTML=DIAS.map(d=>{
-    const slots=calData[d]||[];
-    // always show at least 1 row, plus an add button
-    const rows=slots.length>0?slots:[];
-    return `<div style="margin-bottom:14px;">
-      <div style="font-size:.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;">${d}</div>
-      <div id="cal-rows-${d}">
-        ${rows.map((s,i)=>calRow(d,i,s.materia,s.horario)).join('')}
-      </div>
-      <button class="btn btn-secondary btn-sm" onclick="addCalRow('${d}')" style="margin-top:4px;">+ Agregar materia</button>
-    </div>`;
-  }).join('');
-}
-
-function calRow(dia,idx,mat='',hor=''){
-  return `<div style="display:flex;gap:6px;margin-bottom:5px;align-items:center;" id="cal-row-${dia}-${idx}">
-    <input type="text" placeholder="Materia" value="${mat.replace(/"/g,'&quot;')}" style="flex:2;font-size:.82rem;padding:6px 9px;" id="cal-mat-${dia}-${idx}">
-    <input type="text" placeholder="Horario (ej: 08:00)" value="${hor.replace(/"/g,'&quot;')}" style="flex:1;font-size:.82rem;padding:6px 9px;" id="cal-hor-${dia}-${idx}">
-    <button class="btn btn-success btn-sm" onclick="saveCalRow('${dia}',${idx})" title="Guardar">✓</button>
-    <button class="btn btn-danger btn-sm" onclick="removeCalRow('${dia}',${idx})" title="Quitar">✕</button>
-  </div>`;
-}
-
-window.saveCalRow=async(dia,idx)=>{
-  const mat=document.getElementById(`cal-mat-${dia}-${idx}`)?.value||'';
-  const hor=document.getElementById(`cal-hor-${dia}-${idx}`)?.value||'';
-  if(!calData[dia])calData[dia]=[];
-  calData[dia][idx]={materia:mat,horario:hor};
-  await saveCalendar();
-};
-window.addCalRow=async(dia)=>{
-  if(!calData[dia])calData[dia]=[];
-  calData[dia].push({materia:'',horario:''});
-  await saveCalendar();
-};
-window.updateCalRow=async(dia,idx,field,val)=>{
-  if(!calData[dia]||!calData[dia][idx])return;
-  calData[dia][idx][field]=val;
-  await saveCalendar(false); // silent save
-};
-window.removeCalRow=async(dia,idx)=>{
-  calData[dia].splice(idx,1);
-  await saveCalendar();
-};
-async function saveCalendar(doToast=true){
-  sync(true);
-  await setDoc(doc(db,'users_cal',me.uid),calData).catch(console.error);
-  sync(false);
-  if(doToast)toast('Calendario actualizado ✓');
-}
 
 // ── ACTIVIDADES ──
 // point 13: TP number selector

@@ -190,17 +190,17 @@ textarea{resize:vertical;min-height:54px;}
 /* ── CARDS (points 16-18) ── */
 /* Inter inside cards, Playfair only outside */
 .activity-list{display:flex;flex-direction:column;gap:8px;}
-.activity-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:12px;transition:box-shadow .18s,transform .18s;box-shadow:var(--shadow-sm);}.card-materia-center{font-size:0.9rem;font-weight:600;color:var(--text-muted);font-family:'Playfair Display',serif;text-align:center;flex-shrink:0;min-width:120px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.activity-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;align-items:center;gap:12px;transition:box-shadow .18s,transform .18s;box-shadow:var(--shadow-sm);}.card-materia-center{font-size:0.9rem;font-weight:600;color:var(--text-muted);font-family:'Playfair Display',serif;text-align:center;flex-shrink:0;min-width:120px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .activity-card:hover{box-shadow:var(--shadow);transform:translateY(-1px);}
 .activity-card.done-card{background:#fafdfb;opacity:.88;}
 .activity-card.done-card:hover{opacity:1;}
 .activity-card.urgent{}
 .activity-card.soon{}
-.card-title-text{font-family:'Inter',sans-serif;font-size:0.92rem;font-weight:600;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card-title-text{font-family:'Inter',sans-serif;font-size:0.92rem;font-weight:600;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
 .card-unit{font-size:0.78rem;color:var(--text-muted);font-style:italic;margin-left:4px;}
 .card-meta-row{font-size:0.78rem;color:var(--text-muted);display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
 .card-meta-item strong{color:var(--text);font-weight:500;}
-.card-note-text{font-size:0.76rem;color:var(--text-light);font-style:italic;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card-note-text{font-size:0.76rem;color:var(--text-light);font-style:italic;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:block;}
 .card-note-text::before{content:'Nota: ';font-weight:600;font-style:normal;color:var(--text-muted);}
 .card-status{text-align:right;flex-shrink:0;min-width:100px;}
 .urgency-text{font-size:0.76rem;font-weight:500;color:var(--text-muted);}
@@ -284,7 +284,7 @@ textarea{resize:vertical;min-height:54px;}
   .stat-pill strong{font-size:1rem;}
   .header-title{font-size:.88rem;}
   .stat-pill .pill-label{display:none;}
-  .activity-card{grid-template-columns:1fr auto auto;gap:8px;}
+  .activity-card{grid-template-columns:minmax(0,1fr) auto auto;gap:8px;}
   .card-status{text-align:right;min-width:70px;font-size:0.72rem;}
   .user-badge .badge-name{display:none;}
   .manage-box h3{font-size:.88rem;}
@@ -464,7 +464,7 @@ textarea{resize:vertical;min-height:54px;}
           <div><label>Tipo de tarea</label><select id="f-tarea" onchange="onTareaChange()"><option value="">— Elegir —</option></select></div>
           <div id="tp-num-wrap" style="display:none"><label>Número de TP</label><select id="f-tp-num"><option value="">— Elegir —</option></select></div>
           <div><label>Fecha límite / entrega</label><input type="date" id="f-fecha-fin"></div>
-          <div class="full"><label>Notas / detalles</label><textarea id="f-notas" placeholder="Detalles adicionales..."></textarea></div>
+          <div class="full"><label>Notas / detalles <span id="notas-counter" style="font-weight:400;color:var(--text-light);text-transform:none;letter-spacing:0;">(0/80)</span></label><textarea id="f-notas" placeholder="Detalles adicionales..." maxlength="80" oninput="document.getElementById('notas-counter').textContent='('+this.value.length+'/80)'"></textarea></div>
         </div>
         <div class="form-actions">
           <button class="btn btn-primary" onclick="agregarActividad()">✓ Guardar actividad</button>
